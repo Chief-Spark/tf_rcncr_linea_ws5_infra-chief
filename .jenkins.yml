@@ -1,0 +1,62 @@
+version: 1.0.1
+global:
+  application: null
+  tech: terraform
+  language: terraform
+  jdk: 8
+develop:
+  before_deploy:
+    cmd: cp -r trunk/* develop/
+  after_build:
+    sonarQubeScan:
+      sources: .
+      projectKey: null
+      projectName: null
+      projectVersion: 1.0
+      terraform.provider.aws.version: 5.51.1
+  deploy:
+    terraform:
+      accountid: null
+qa:
+  before_deploy:
+    cmd: cp -r trunk/* qa/
+  after_build:
+    sonarQubeScan:
+      sources: .
+      projectKey: null
+      projectName: null
+      projectVersion: 1.0
+      terraform.provider.aws.version: 5.51.1
+  deploy:
+    terraform:
+      accountid: null
+demo:
+  before_deploy:
+    cmd: cp -r trunk/* demo/
+  deploy:
+    terraform:
+      accountid: null
+production:
+  before_deploy:
+    cmd: cp -r trunk/* production/
+  deploy:
+    terraform:
+      accountid: null
+qa_rllbck:
+  before_deploy:
+    cmd: cp -r trunk/* qa/
+  deploy:
+    terraform:
+      accountid: null
+demo_rllbck:
+  before_deploy:
+    cmd: cp -r trunk/* demo/
+  deploy:
+    terraform:
+      accountid: null
+production_rllbck:
+  before_deploy:
+    cmd: cp -r trunk/* production/
+  deploy:
+    terraform:
+      accountid: null
