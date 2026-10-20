@@ -48,6 +48,7 @@ valores son opcionales: si estan vacios se omite el permiso o la ruta asociada.
 | `stepfunctions.tf` | Step Function Update RecMaster (Distributed Map) | nativo |
 | `eventbridge.tf` | Regla EventBridge Update (manifiesto -> Step Function) | `eits-tf-aws-eventbridge` 2.7.0 |
 | `iam-*.tf` | Un rol por componente | `eits-tf-aws-iam` 1.9.7 |
+| `iam-apigw-cloudwatch.tf` | Rol de CloudWatch de API Gateway (configuracion a nivel cuenta que gestiona la libreria) | `eits-tf-aws-iam` 1.9.7 |
 | `iam-redshift.tf` | Roles de Redshift: UNLOAD (Reconocer) y COPY cross-account por role chaining (Bureau) | `eits-tf-aws-iam` 1.9.7 |
 
 Las librerias exigen AWS provider 6.x (`provider.tf`: `~> 6.48`).
@@ -61,6 +62,11 @@ Las librerias exigen AWS provider 6.x (`provider.tf`: `~> 6.48`).
 - Los nombres de recursos que arman las librerias (`-lambda`, `-s3`, `-event`,
   `-api`) se replican en `locals.tf`, para que los roles apunten a ARNs
   deterministicos.
+
+### Tag Environment
+Las librerias solo aceptan `dev, prd, sbx, stg, tst, uat` (api-gateway usa `prd`
+para elegir los VPC endpoints de produccion). `locals.tf` mapea: develop=dev,
+qa=tst, demo=uat, production=prd.
 
 ### Codigo de las Lambdas (placeholder)
 Las Lambdas se crean con `trunk/placeholder/lambda-placeholder.zip` (ver su README)

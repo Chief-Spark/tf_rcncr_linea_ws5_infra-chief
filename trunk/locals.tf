@@ -6,6 +6,15 @@ locals {
     production = "prod"
   }
 
+  # Valores del tag Environment que aceptan las librerias eits-tf-aws-*
+  # (dev, prd, sbx, stg, tst, uat). api-gateway usa "prd" para elegir endpoints.
+  env_tag = {
+    develop    = "dev"
+    qa         = "tst"
+    demo       = "uat"
+    production = "prd"
+  }
+
   env_short   = lookup(local.env_prefix, var.environment, var.environment)
   name_prefix = "${local.env_short}-${var.account_id}-${var.project}"
 
@@ -58,7 +67,7 @@ locals {
   s3_exception_tags = var.s3_source_ip_exception ? { "eec:SourceIPException" = "true" } : {}
 
   default_tags = {
-    Environment = var.environment
+    Environment = lookup(local.env_tag, var.environment, var.environment)
     Project     = var.project
     AppID       = var.app_id
     CostString  = var.cost_string

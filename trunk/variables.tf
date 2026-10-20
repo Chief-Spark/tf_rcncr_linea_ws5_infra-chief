@@ -139,13 +139,6 @@ variable "reclinea_output_bucket" {
   default     = ""
 }
 
-# --- API Gateway ---
-variable "apigw_create_cloudwatch_role" {
-  description = "true solo si la cuenta NO tiene aun el rol BURoleForAPIGatewayCloudwatchGlobal (configuracion a nivel cuenta)."
-  type        = bool
-  default     = false
-}
-
 # --- Facturacion (la Lambda consumidora vive en otra cuenta) ---
 variable "facturacion_consumer_principal_arns" {
   description = "ARNs de los roles (otra cuenta) que consumen la cola de facturacion. Vacio = sin acceso cross-account."

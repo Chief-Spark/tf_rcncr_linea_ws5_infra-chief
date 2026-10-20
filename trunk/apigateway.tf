@@ -69,8 +69,11 @@ module "api" {
   name          = local.names.api # => dev-647096294147-rcncr-ws5-reconocer-linea-api
   open_api_json = local.openapi
 
-  create_cloudwatch_role = var.apigw_create_cloudwatch_role
-  permissions_boundary   = local.permissions_boundary_arn
+  # Rol de iam-apigw-cloudwatch.tf. El nombre se toma del ARN (desconocido hasta
+  # crear el rol) para que la libreria busque el rol en el apply, ya creado, y no
+  # en el plan (su precondicion fallaria en el primer build).
+  create_cloudwatch_role = false
+  cloudwatch_role_name   = reverse(split("/", module.apigw_cloudwatch_role.role_arn))[0]
 
   deployment = {
     # Redeploy del stage cuando cambia la especificacion.
