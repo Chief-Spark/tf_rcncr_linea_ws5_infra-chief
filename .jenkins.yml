@@ -1,22 +1,24 @@
 version: 1.0.1
 global:
-  application: null
+  application: 29197
   tech: terraform
   language: terraform
   jdk: 8
+# NOTA: este job solo despliega el env 'develop' -> cuenta 147 (647096294147).
 develop:
   before_deploy:
     cmd: cp -r trunk/* develop/
   after_build:
     sonarQubeScan:
       sources: .
-      projectKey: null
-      projectName: null
+      projectKey: SP-LATAM:EITS:DevSecOp:29197_Procesos-Especiales-Batch-AWS
+      projectName: SP-LATAM:EITS:DevSecOp:29197_Procesos-Especiales-Batch-AWS
       projectVersion: 1.0
       terraform.provider.aws.version: 5.51.1
   deploy:
     terraform:
-      accountid: null
+      accountid: 647096294147
+      tfVersion: 1.9.0
 qa:
   before_deploy:
     cmd: cp -r trunk/* qa/

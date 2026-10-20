@@ -26,3 +26,36 @@ Los archivos .tf dentro de estas carpetas provienen de trunk/ durante el pipelin
 
 - [TERRAFORM - Proceso de versionamiento y despliegue](https://pages.experian.local/spaces/GDLC/pages/1235654713/TERRAFORM+-+Proceso+de+versionamiento+y+despliegue)
 - [Nomenclaturas para la Region SPLatam](https://pages.experian.local/spaces/ESCCFT/pages/1903352398/Nomenclaturas+para+la+Regi%C3%B3n+SPLatam)
+
+## Stack actual: Reconocer Master Linea (cuenta 147 = `647096294147`)
+
+Despliega solo IaC (el codigo de Lambdas y Glue vive en otros repos) de los
+componentes del HLD *Reconocer Master Cloud - Consumo en linea* marcados para
+este repo. Las tablas DynamoDB (Base_Online / Metadata & Control) **no** se
+crean aqui: se referencian por nombre (`dynamodb.tf`).
+
+### Nomenclatura
+`name_prefix = <stage>-<accountId>-<project>` -> `dev-647096294147-rcncr-ws5`.
+Los roles se crean con `eits-tf-aws-iam` (`?ref=1.9.1`, Terraform >= 1.9) pasando
+`role_name` con guion inicial, lo que produce `BURoleFor-dev-647096294147-rcncr-ws5-<sufijo>`.
+
+### Roles (fase 1)
+
+| Archivo | Rol (sufijo) | Componente |
+|---|---|---|
+| `iam-lambda-authorizer.tf` | `lmbd-authorizer` | Lambda Authorizer (Okta) |
+| `iam-lambda-reclineacloud.tf` | `lmbd-reclineacloud` | Lambda RecLineaCloud |
+| `iam-lambda-facturacion.tf` | `lmbd-facturacion` | Lambda Facturacion (consume SQS FIFO) |
+| `iam-lambda-validation.tf` | `lmbd-validation` | Lambda Validation |
+| `iam-glue-transform.tf` | `glue-transform` | Glue Job RecMas_Transform_and_Upload |
+| `iam-sfn-updrecmaster.tf` | `sfn-updrecmaster` | Step Function Update RecMaster (Distributed Map) |
+| `iam-evb-updrecmaster.tf` | `evb-updrecmaster` | Regla EventBridge Update |
+
+Los roles apuntan a ARNs deterministicos (`locals.tf` -> `names` / `arns`), asi
+que se pueden crear antes que los recursos.
+
+### Pendiente
+- Nombres de las tablas DynamoDB en `develop/terraform.tfvars` (el plan falla sin ellos).
+- CMK (KMS), VPC de Lambdas y bucket de salida de PDFs (variables opcionales).
+- Recursos: API Gateway, Lambdas, SQS FIFO + DLQ, S3, EventBridge, Glue Job y
+  Step Function (segun las librerias que se confirmen).
