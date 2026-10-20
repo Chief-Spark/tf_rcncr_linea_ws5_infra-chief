@@ -34,11 +34,11 @@ s3_source_ip_exception     = false
 # Se crean con un paquete placeholder; el codigo real lo publica el pipeline de
 # cada repo de codigo (update-function-code). Defaults en trunk/lambda.tf:
 #   authorizer    python3.13  handler.lambda_handler
-#   reclineacloud python3.13  handler.lambda_handler
+#   reclineacloud java21      com.experian.reconocer.linea.Handler::handleRequest  (CONFIRMAR)
 #   validation    python3.13  handler.lambda_handler
 # runtime y handler deben coincidir con el codigo real. Solo definir lo que cambie:
 # lambdas = {
-#   reclineacloud = { handler = "app.main.lambda_handler" }
+#   reclineacloud = { handler = "<paquete.Clase>::handleRequest" }
 # }
 enable_lambdas = true
 

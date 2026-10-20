@@ -22,13 +22,12 @@
 
 | Componente | Repo | Combinacion valida |
 |---|---|---|
-| RecLineaCloud | `A_RCNCR_LN_RCLNCLD` | AWS – LAMBDA-ZIP |
+| RecLineaCloud | `A_RCNCR_LN_RCLNCLD` | AWS – LAMBDA-JAVA |
 | Lambda Authorizer | `A_RCNCR_LN_ATHRZR` | AWS – LAMBDA-ZIP |
 | Validation | `A_RCNCR_LN_VLDTN` | AWS – LAMBDA-ZIP |
 | RecMas_Transform_and_Upload | `A_RCNCR_LN_RCMS_TRNSFRM` | AWS – GLUE-PYTHON |
 
-Las tres Lambdas son Python 3.13: LAMBDA-ZIP es la combinacion valida para Python
-(no existe LAMBDA-PYTHON).
+LAMBDA-ZIP es la combinacion valida para Lambdas Python (no existe LAMBDA-PYTHON).
 
 ---
 
@@ -40,12 +39,12 @@ Buenos dias, solicito la creacion del siguiente repositorio en Bitbucket:
 Country: Colombia
 ProjectKey: COAWSPPR
 Tecnologia: AWS
-Lenguaje: LAMBDA-ZIP
+Lenguaje: LAMBDA-JAVA
 Nombre Repositorio: A_RCNCR_LN_RCLNCLD
 
 Adicional aplicaciones: Sonar y Checkmarx con AppID 29197.
 
-Contexto: codigo Python 3.13 de la Lambda RecLineaCloud del stack Reconocer
+Contexto: codigo de la Lambda RecLineaCloud (Java 21) del stack Reconocer
 Master Linea (SLCOPRBA-1437). La infraestructura ya esta desplegada por
 COAWSPPR/TF_RCNCR_LINEA_WS5_INFRA en la cuenta 647096294147; este repo solo
 publica el codigo en la funcion dev-647096294147-rcncr-ws5-reclineacloud-lambda.

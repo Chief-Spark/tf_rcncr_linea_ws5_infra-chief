@@ -87,10 +87,9 @@ y el pipeline de cada repo de codigo publica la version real con
 | Codigo de la Lambda | Repo de codigo (su pipeline) |
 | runtime, handler, memoria, timeout, concurrencia, env vars, rol, VPC | Este repo (`lambda.tf`, `var.lambdas`) |
 
-Defaults: las tres Lambdas en `python3.13` con `handler.lambda_handler`
-(`handler.py` en la raiz del zip). El HLD (ADR-08) proponia Java 21 para
-RecLineaCloud; se decidio Python. Si el codigo usa otro modulo/funcion, se
-cambia `handler` en `var.lambdas`.
+Defaults: RecLineaCloud `java21` (HLD, ADR-08); Authorizer y Validation
+`python3.13` con `handler.lambda_handler`. El handler de RecLineaCloud es
+provisional: confirmarlo con desarrollo.
 
 ### Bucket policy de eits-tf-aws-s3
 La libreria niega el acceso a S3 fuera de IPs de Experian / VPC endpoints. Glue,
@@ -116,9 +115,10 @@ Inventario de lo desplegado y repo de desarrollo de cada componente:
 - Asociar el rol `redshift-unload` al namespace del Redshift Reconocer (lo hace quien administra el namespace).
 - ARN del rol IAM del Redshift Bureau (`redshift_bureau_role_arn`) y, en su cuenta, `sts:AssumeRole` sobre `redshift-copy-xacct`.
 - ARN del rol consumidor de facturacion (otra cuenta).
-- Confirmar con desarrollo el handler de cada Lambda si difiere de `handler.lambda_handler`.
+- Handler real de RecLineaCloud (y runtime/handler de las Python si difieren del default).
 - Radicar los 4 repos de desarrollo ([docs/SOLICITUD-REPOS-DESARROLLO.md](docs/SOLICITUD-REPOS-DESARROLLO.md)) y su permiso `lambda:UpdateFunctionCode` / `s3:PutObject` de despliegue.
 - Nombre de la Lambda RecMicroservicios (ruta Ext del API).
+- SnapStart para RecLineaCloud: la libreria eits-tf-aws-lambda aun no lo soporta.
 - Script del Glue publicado por su repo en `s3://<upload-staging>/glue-scripts/` (o `glue_script_location`).
 - Definicion de la Step Function: borrador segun el HLD, validar con desarrollo.
 - CMK de KMS (`kms_key_arn`), opcional: quita el warning Wiz Serverless-010 de las env vars de las Lambdas.
