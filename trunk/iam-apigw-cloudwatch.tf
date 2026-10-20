@@ -1,8 +1,7 @@
 # Rol de CloudWatch de API Gateway (configuracion a nivel cuenta/region:
-# aws_api_gateway_account, que la libreria eits-tf-aws-api-gateway siempre
-# gestiona). La cuenta no tiene el rol por defecto de la libreria
-# (BURoleForAPIGatewayCloudwatchGlobal) y ese nombre no cumple la nomenclatura,
-# asi que se crea aqui con eits-tf-aws-iam y se le pasa a la libreria.
+# aws_api_gateway_account en apigateway.tf). La cuenta no tenia el rol por
+# defecto de la libreria (BURoleForAPIGatewayCloudwatchGlobal) y ese nombre no
+# cumple la nomenclatura, asi que se crea aqui con eits-tf-aws-iam.
 data "aws_iam_policy_document" "apigw_cloudwatch_assume_role" {
   statement {
     actions = ["sts:AssumeRole"]

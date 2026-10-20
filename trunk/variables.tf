@@ -146,6 +146,13 @@ variable "reclinea_output_bucket" {
   default     = ""
 }
 
+# --- API Gateway ---
+variable "apigw_vpc_endpoint_ids" {
+  description = "VPC endpoints (execute-api) por los que se expone el API privado. Default: e-Connect v3 interno de us-east-1 (el mismo que usa eits-tf-aws-api-gateway)."
+  type        = list(string)
+  default     = ["vpce-099b9bad5f18ee5a1"]
+}
+
 # --- Facturacion (la Lambda consumidora vive en otra cuenta) ---
 variable "facturacion_consumer_principal_arns" {
   description = "ARNs de los roles (otra cuenta) que consumen la cola de facturacion. Vacio = sin acceso cross-account."

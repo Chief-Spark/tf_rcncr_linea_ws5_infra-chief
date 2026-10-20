@@ -43,12 +43,12 @@ valores son opcionales: si estan vacios se omite el permiso o la ruta asociada.
 | `s3.tf` | Buckets Triggers_reconocer (notifica a EventBridge) y Upload_Staging | `eits-tf-aws-s3` 2.19.2 |
 | `sqs.tf` | SQS FIFO de facturacion + DLQ (consumidor cross-account) | nativo |
 | `lambda.tf` | Lambdas Authorizer, RecLineaCloud y Validation | `eits-tf-aws-lambda` 1.11.2 |
-| `apigateway.tf` | API REST privado: Int -> RecLineaCloud, Ext -> RecMicroservicios | `eits-tf-aws-api-gateway` 1.4.2 |
+| `apigateway.tf` | API REST privado: Int -> RecLineaCloud, Ext -> RecMicroservicios | nativo (ver nota) |
 | `glue.tf` | Glue Job RecMas_Transform_and_Upload | `eits-tf-aws-glue` 1.5.1 |
 | `stepfunctions.tf` | Step Function Update RecMaster (Distributed Map) | nativo |
 | `eventbridge.tf` | Regla EventBridge Update (manifiesto -> Step Function) | `eits-tf-aws-eventbridge` 2.7.0 |
 | `iam-*.tf` | Un rol por componente | `eits-tf-aws-iam` 1.9.7 |
-| `iam-apigw-cloudwatch.tf` | Rol de CloudWatch de API Gateway (configuracion a nivel cuenta que gestiona la libreria) | `eits-tf-aws-iam` 1.9.7 |
+| `iam-apigw-cloudwatch.tf` | Rol de CloudWatch de API Gateway (configuracion a nivel cuenta) | `eits-tf-aws-iam` 1.9.7 |
 | `iam-redshift.tf` | Roles de Redshift: UNLOAD (Reconocer) y COPY cross-account por role chaining (Bureau) | `eits-tf-aws-iam` 1.9.7 |
 
 Las librerias exigen AWS provider 6.x (`provider.tf`: `~> 6.48`).
@@ -62,6 +62,15 @@ Las librerias exigen AWS provider 6.x (`provider.tf`: `~> 6.48`).
 - Los nombres de recursos que arman las librerias (`-lambda`, `-s3`, `-event`,
   `-api`) se replican en `locals.tf`, para que los roles apunten a ARNs
   deterministicos.
+
+### API Gateway con recursos nativos
+`eits-tf-aws-api-gateway` solo hace rutas anidadas importando OpenAPI
+(`PutRestApi`). El rol de Jenkins solo puede crear/modificar APIs PRIVATE
+(condicion `apigateway:Request/EndpointType`) y esa importacion no llega como
+PRIVATE: build 74280 fallo con AccessDenied en `apigateway:PUT /restapis/{id}`.
+`apigateway.tf` replica lo que hacia la libreria (API PRIVATE por el VPC endpoint
+e-Connect v3, resource policy, client certificate, rol de CloudWatch de la
+cuenta, un stage) con recursos nativos y las rutas anidadas del HLD.
 
 ### Tag Environment
 Las librerias solo aceptan `dev, prd, sbx, stg, tst, uat` (api-gateway usa `prd`

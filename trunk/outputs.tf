@@ -54,10 +54,10 @@ output "lambda_arns" {
 
 output "api_id" {
   description = "Private REST API id (null until enable_lambdas = true)"
-  value       = try(module.api[0].id, null)
+  value       = try(aws_api_gateway_rest_api.this[0].id, null)
 }
 
 output "api_invoke_url" {
   description = "Private REST API stage invoke URL (null until enable_lambdas = true)"
-  value       = try(module.api[0].invoke_url, null)
+  value       = try(aws_api_gateway_stage.this[0].invoke_url, null)
 }
