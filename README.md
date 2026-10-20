@@ -106,6 +106,8 @@ Build 74281 OK: todos los componentes creados. API `bg2kuoleug` (PRIVATE), stage
 Las Lambdas siguen con el placeholder, asi que toda llamada al API falla hasta
 publicar el codigo real. Historial de builds y lecciones:
 [docs/APRENDIZAJES-DESPLIEGUE-LINEA.md](docs/APRENDIZAJES-DESPLIEGUE-LINEA.md).
+Inventario de lo desplegado y repo de desarrollo de cada componente:
+[docs/INVENTARIO-IAC-Y-REPOS.md](docs/INVENTARIO-IAC-Y-REPOS.md).
 
 ### Pendiente
 - Re-ejecutar el build y confirmar que el plan sale "No changes" (idempotencia).
@@ -114,7 +116,7 @@ publicar el codigo real. Historial de builds y lecciones:
 - ARN del rol IAM del Redshift Bureau (`redshift_bureau_role_arn`) y, en su cuenta, `sts:AssumeRole` sobre `redshift-copy-xacct`.
 - ARN del rol consumidor de facturacion (otra cuenta).
 - Handler real de RecLineaCloud (y runtime/handler de las Python si difieren del default).
-- Permiso `lambda:UpdateFunctionCode` para el pipeline de cada repo de codigo.
+- Radicar los 4 repos de desarrollo ([docs/SOLICITUD-REPOS-DESARROLLO.md](docs/SOLICITUD-REPOS-DESARROLLO.md)) y su permiso `lambda:UpdateFunctionCode` / `s3:PutObject` de despliegue.
 - Nombre de la Lambda RecMicroservicios (ruta Ext del API).
 - SnapStart para RecLineaCloud: la libreria eits-tf-aws-lambda aun no lo soporta.
 - Script del Glue publicado por su repo en `s3://<upload-staging>/glue-scripts/` (o `glue_script_location`).
