@@ -6,16 +6,22 @@ data "aws_iam_policy_document" "lambda_reclineacloud" {
     data.aws_iam_policy_document.kms_use.json
   ]
 
-  statement {
-    sid       = "ReadBaseOnline"
-    actions   = ["dynamodb:GetItem", "dynamodb:BatchGetItem", "dynamodb:Query", "dynamodb:DescribeTable"]
-    resources = [local.dynamodb_reconocer_master_arn, "${local.dynamodb_reconocer_master_arn}/index/*"]
+  dynamic "statement" {
+    for_each = local.has_master_table
+    content {
+      sid       = "ReadBaseOnline"
+      actions   = ["dynamodb:GetItem", "dynamodb:BatchGetItem", "dynamodb:Query", "dynamodb:DescribeTable"]
+      resources = [local.dynamodb_reconocer_master_arn, "${local.dynamodb_reconocer_master_arn}/index/*"]
+    }
   }
 
-  statement {
-    sid       = "ReadControl"
-    actions   = ["dynamodb:GetItem", "dynamodb:Query"]
-    resources = [local.dynamodb_metadata_control_arn]
+  dynamic "statement" {
+    for_each = local.has_control_table
+    content {
+      sid       = "ReadControl"
+      actions   = ["dynamodb:GetItem", "dynamodb:Query"]
+      resources = [local.dynamodb_metadata_control_arn]
+    }
   }
 
   statement {

@@ -10,13 +10,14 @@ permissions_boundary = "BUPolicyForBoundaryDTO"
 project              = "rcncr-ws5"
 enable_create_role   = true
 
-# --- Recursos existentes (NO se despliegan aqui) ---
-# PENDIENTE: nombres reales de las tablas. Sin estos valores el plan falla a
-# proposito, para no crear policies apuntando a tablas equivocadas.
-# dynamodb_reconocer_master_table = "<POR_CONFIRMAR>"
-# dynamodb_metadata_control_table = "<POR_CONFIRMAR>"
+# --- Recursos existentes (NO se despliegan aqui; solo se referencian) ---
+# Tablas DynamoDB: se crean por otro proceso. Vacio = roles sin acceso a la
+# tabla; poner el nombre cuando exista y redesplegar.
+dynamodb_reconocer_master_table = ""
+dynamodb_metadata_control_table = ""
 
-# Lambda RecMicroservicios existente (destino del API Ext). Requerida con enable_lambdas.
+# Lambda RecMicroservicios existente: conecta la ruta del API Ext y permite que
+# su rol publique en la cola de facturacion. Vacio = sin ruta Ext ni permiso.
 recmicroservicios_function_name = ""
 
 # --- Transversales ---
@@ -44,9 +45,15 @@ enable_lambdas = false
 reclinea_output_bucket = ""
 
 # --- Facturacion (consumidor en otra cuenta) ---
-# PENDIENTE: ARN del rol de la Lambda de facturacion en la otra cuenta.
+# PENDIENTE: ARN del rol de la Lambda de facturacion en la otra cuenta. Vacio =
+# la cola se crea pero nadie de afuera la puede consumir todavia.
 facturacion_consumer_principal_arns = []
 
 # --- Triggers_reconocer ---
-# PENDIENTE: ARN del rol de Redshift que hace el UNLOAD al bucket.
+# PENDIENTE: ARN del ROL IAM (no del namespace) asociado al Redshift Reconocer
+# (namespace 8eac1c32-7d63-4570-9906-334aa9903dc5) que hace el UNLOAD.
 triggers_writer_principal_arns = []
+
+# PENDIENTE: ARN del ROL IAM del Redshift Bureau (cuenta Procesos Batch) que hace
+# el COPY desde este bucket.
+triggers_reader_principal_arns = []

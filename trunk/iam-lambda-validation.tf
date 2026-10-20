@@ -12,22 +12,28 @@ data "aws_iam_policy_document" "lambda_validation" {
     resources = [local.arns.s3_staging, "${local.arns.s3_staging}/*", local.arns.s3_triggers, "${local.arns.s3_triggers}/*"]
   }
 
-  statement {
-    sid       = "ReadBaseOnline"
-    actions   = ["dynamodb:GetItem", "dynamodb:Query", "dynamodb:DescribeTable"]
-    resources = [local.dynamodb_reconocer_master_arn]
+  dynamic "statement" {
+    for_each = local.has_master_table
+    content {
+      sid       = "ReadBaseOnline"
+      actions   = ["dynamodb:GetItem", "dynamodb:Query", "dynamodb:DescribeTable"]
+      resources = [local.dynamodb_reconocer_master_arn]
+    }
   }
 
-  statement {
-    sid = "WriteControl"
-    actions = [
-      "dynamodb:GetItem",
-      "dynamodb:Query",
-      "dynamodb:PutItem",
-      "dynamodb:UpdateItem",
-      "dynamodb:ConditionCheckItem"
-    ]
-    resources = [local.dynamodb_metadata_control_arn]
+  dynamic "statement" {
+    for_each = local.has_control_table
+    content {
+      sid = "WriteControl"
+      actions = [
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:ConditionCheckItem"
+      ]
+      resources = [local.dynamodb_metadata_control_arn]
+    }
   }
 }
 

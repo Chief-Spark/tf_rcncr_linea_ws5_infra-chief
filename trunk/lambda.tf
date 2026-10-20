@@ -19,19 +19,14 @@ locals {
   lambda_infra_env = {
     authorizer = {}
     reclineacloud = merge(
-      {
-        TABLE_BASE_ONLINE   = var.dynamodb_reconocer_master_table
-        TABLE_CONTROL       = var.dynamodb_metadata_control_table
-        SQS_FACTURACION_URL = aws_sqs_queue.facturacion.url
-      },
+      local.dynamodb_env,
+      { SQS_FACTURACION_URL = aws_sqs_queue.facturacion.url },
       var.reclinea_output_bucket != "" ? { OUTPUT_BUCKET = var.reclinea_output_bucket } : {}
     )
-    validation = {
-      TABLE_BASE_ONLINE = var.dynamodb_reconocer_master_table
-      TABLE_CONTROL     = var.dynamodb_metadata_control_table
-      BUCKET_STAGING    = module.s3_staging.s3_bucket_id
-      BUCKET_TRIGGERS   = module.s3_triggers.s3_bucket_id
-    }
+    validation = merge(local.dynamodb_env, {
+      BUCKET_STAGING  = module.s3_staging.s3_bucket_id
+      BUCKET_TRIGGERS = module.s3_triggers.s3_bucket_id
+    })
   }
 }
 

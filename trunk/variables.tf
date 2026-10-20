@@ -55,24 +55,21 @@ variable "assume_role_external_id" {
 
 # --- Recursos existentes (NO se despliegan en este repo) ---
 variable "dynamodb_reconocer_master_table" {
-  description = "Nombre de la tabla DynamoDB Base_Online (reconocer_master)."
+  description = "Nombre de la tabla DynamoDB Base_Online (reconocer_master). Se crea por otro proceso; vacio = roles sin acceso a esta tabla."
   type        = string
+  default     = ""
 }
 
 variable "dynamodb_metadata_control_table" {
-  description = "Nombre de la tabla DynamoDB de Metadata & Control (puntero de version activa)."
+  description = "Nombre de la tabla DynamoDB de Metadata & Control (puntero de version activa). Se crea por otro proceso; vacio = roles sin acceso a esta tabla."
   type        = string
+  default     = ""
 }
 
 variable "recmicroservicios_function_name" {
-  description = "Nombre de la Lambda RecMicroservicios existente (destino del API Ext). Requerido si enable_lambdas = true."
+  description = "Nombre de la Lambda RecMicroservicios EXISTENTE (no se despliega aqui). Se usa para la ruta del API Ext y para que su rol pueda publicar en la cola de facturacion."
   type        = string
   default     = ""
-
-  validation {
-    condition     = !var.enable_lambdas || var.recmicroservicios_function_name != ""
-    error_message = "recmicroservicios_function_name es requerido cuando enable_lambdas = true (lo usa el API Gateway)."
-  }
 }
 
 # --- Transversales ---
@@ -168,7 +165,13 @@ variable "facturacion_max_receive_count" {
 
 # --- Triggers_reconocer ---
 variable "triggers_writer_principal_arns" {
-  description = "ARNs de los roles que escriben el UNLOAD + manifiesto en Triggers_reconocer (p. ej. el rol de Redshift)."
+  description = "ARNs de los roles IAM que escriben el UNLOAD + manifiesto en Triggers_reconocer (rol del Redshift Reconocer, cuenta 147)."
+  type        = list(string)
+  default     = []
+}
+
+variable "triggers_reader_principal_arns" {
+  description = "ARNs de los roles IAM que leen Triggers_reconocer (COPY del Redshift Bureau, cuenta Procesos Batch)."
   type        = list(string)
   default     = []
 }

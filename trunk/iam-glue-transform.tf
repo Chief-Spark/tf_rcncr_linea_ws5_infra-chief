@@ -32,10 +32,13 @@ data "aws_iam_policy_document" "glue_transform" {
     resources = ["arn:aws:s3:::${local.glue_script_bucket}/*"]
   }
 
-  statement {
-    sid       = "WriteBaseOnline"
-    actions   = ["dynamodb:BatchWriteItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DescribeTable"]
-    resources = [local.dynamodb_reconocer_master_arn]
+  dynamic "statement" {
+    for_each = local.has_master_table
+    content {
+      sid       = "WriteBaseOnline"
+      actions   = ["dynamodb:BatchWriteItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DescribeTable"]
+      resources = [local.dynamodb_reconocer_master_arn]
+    }
   }
 
   statement {

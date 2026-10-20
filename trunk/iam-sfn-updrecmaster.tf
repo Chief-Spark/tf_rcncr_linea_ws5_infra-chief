@@ -52,10 +52,13 @@ data "aws_iam_policy_document" "sfn_updrecmaster" {
     resources = [local.arns.s3_staging, "${local.arns.s3_staging}/*"]
   }
 
-  statement {
-    sid       = "ControlTable"
-    actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem"]
-    resources = [local.dynamodb_metadata_control_arn]
+  dynamic "statement" {
+    for_each = local.has_control_table
+    content {
+      sid       = "ControlTable"
+      actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem"]
+      resources = [local.dynamodb_metadata_control_arn]
+    }
   }
 
   statement {

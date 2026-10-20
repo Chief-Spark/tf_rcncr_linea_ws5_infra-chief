@@ -29,10 +29,12 @@ Los archivos .tf dentro de estas carpetas provienen de trunk/ durante el pipelin
 
 ## Stack actual: Reconocer Master Linea (cuenta 147 = `647096294147`)
 
-Solo IaC: el codigo de Lambdas y Glue vive en otros repos. **No** se despliegan
-aqui las tablas DynamoDB (Base_Online / Metadata & Control), la Lambda
-RecMicroservicios ni la Lambda de Facturacion (vive en otra cuenta): se
-referencian por nombre o ARN.
+Solo IaC: el codigo de Lambdas y Glue vive en otros repos y este repo **no sube
+archivos** (.py, .zip). **No** se despliegan aqui las tablas DynamoDB
+(Base_Online / Metadata & Control, se crean por otro proceso), la Lambda
+RecMicroservicios (existente) ni la Lambda de Facturacion (vive en otra cuenta):
+solo se referencian por nombre o ARN (`dynamodb.tf`, `existing.tf`). Todos esos
+valores son opcionales: si estan vacios se omite el permiso o la ruta asociada.
 
 ### Componentes
 
@@ -70,8 +72,10 @@ la Step Function y la Lambda Validation llaman a S3 desde la red de AWS, por eso
 sus roles llevan el tag `eec:SourceIPException` (`s3_source_ip_exception`).
 
 ### Pendiente
-- Nombres de las tablas DynamoDB (el plan falla sin ellos).
-- ARN del rol consumidor de facturacion (otra cuenta) y del rol de Redshift que escribe en Triggers.
-- Paquetes de las Lambdas y nombre de la Lambda RecMicroservicios (fase 2).
-- Script del Glue en `s3://<upload-staging>/glue-scripts/` (o `glue_script_location`).
+- Nombres de las tablas DynamoDB (sin ellos los roles se crean sin acceso a DynamoDB).
+- ARN del rol IAM del Redshift Reconocer (UNLOAD) y del Redshift Bureau (COPY, cuenta Procesos Batch).
+- ARN del rol consumidor de facturacion (otra cuenta).
+- Fase 2: paquetes y runtimes de las Lambdas Authorizer, RecLineaCloud y Validation;
+  nombre de la Lambda RecMicroservicios.
+- Script del Glue publicado por su repo en `s3://<upload-staging>/glue-scripts/` (o `glue_script_location`).
 - Definicion de la Step Function: borrador segun el HLD, validar con desarrollo.

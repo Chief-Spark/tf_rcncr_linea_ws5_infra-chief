@@ -1,13 +1,12 @@
 # API Gateway REST privado (libreria eits-tf-aws-api-gateway). La libreria crea
 # siempre un API PRIVATE expuesto por el VPC endpoint e-Connect v3 de la region.
 #   API Int -> RecLineaCloud      GET  /v1/sujetos/{tipo}/{numero}/reporte/{perfil}
-#   API Ext -> RecMicroservicios  POST /v1/microservicios/{operacion}   (Lambda existente)
+#   API Ext -> RecMicroservicios  POST /v1/microservicios/{operacion}
+#              (Lambda EXISTENTE, no se despliega aqui; ruta solo si se da su nombre)
 # Rutas tomadas del HLD. Se define por OpenAPI porque los "resources" de la
 # libreria solo admiten rutas de un nivel.
-data "aws_lambda_function" "recmicroservicios" {
-  count = var.enable_lambdas ? 1 : 0
-
-  function_name = var.recmicroservicios_function_name
+locals {
+  apigw_ext_enabled = var.enable_lambdas && var.recmicroservicios_function_name != ""
 }
 
 locals {
@@ -19,7 +18,7 @@ locals {
       title   = local.names.api
       version = "1.0"
     }
-    paths = {
+    paths = merge({
       "/v1/sujetos/{tipo}/{numero}/reporte/{perfil}" = {
         get = {
           parameters = [for p in ["tipo", "numero", "perfil"] : { name = p, in = "path", required = true, schema = { type = "string" } }]
@@ -31,7 +30,7 @@ locals {
             passthroughBehavior = "when_no_match"
           }
         }
-      }
+      } }, local.apigw_ext_enabled ? {
       "/v1/microservicios/{operacion}" = {
         post = {
           parameters = [{ name = "operacion", in = "path", required = true, schema = { type = "string" } }]
@@ -44,7 +43,7 @@ locals {
           }
         }
       }
-    }
+    } : {})
     components = {
       securitySchemes = {
         okta = {
@@ -111,7 +110,7 @@ resource "aws_lambda_permission" "apigw_reclineacloud" {
 
 # Agrega un statement a la resource policy de la Lambda existente RecMicroservicios.
 resource "aws_lambda_permission" "apigw_recmicroservicios" {
-  count = var.enable_lambdas ? 1 : 0
+  count = local.apigw_ext_enabled ? 1 : 0
 
   statement_id  = "AllowApiGatewayInvoke-${local.names.api}"
   action        = "lambda:InvokeFunction"

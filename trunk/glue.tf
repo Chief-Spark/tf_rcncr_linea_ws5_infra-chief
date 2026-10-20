@@ -1,6 +1,7 @@
 # Glue Job RecMas_Transform_and_Upload (libreria eits-tf-aws-glue). Una ejecucion
 # por dominio, lanzada desde el Distributed Map de la Step Function. El script
-# vive en otro repo; aqui solo se apunta a su ubicacion en S3.
+# vive en otro repo y lo publica otro proceso: este repo NO sube archivos .py,
+# solo apunta a su ubicacion en S3.
 # La libreria siempre crea una base del Glue Data Catalog.
 module "glue" {
   source = "git::https://code.experian.local/scm/EUCES/eits-tf-aws-glue.git?ref=1.5.1"
@@ -31,13 +32,15 @@ module "glue" {
       execution_property = {
         max_concurrent_runs = var.sfn_max_concurrency
       }
-      default_arguments = {
-        "--job-language"      = "python"
-        "--TempDir"           = "s3://${local.names.s3_staging}/glue-tmp/"
-        "--TABLE_BASE_ONLINE" = var.dynamodb_reconocer_master_table
-        "--BUCKET_TRIGGERS"   = local.names.s3_triggers
-        "--BUCKET_STAGING"    = local.names.s3_staging
-      }
+      default_arguments = merge(
+        {
+          "--job-language"    = "python"
+          "--TempDir"         = "s3://${local.names.s3_staging}/glue-tmp/"
+          "--BUCKET_TRIGGERS" = local.names.s3_triggers
+          "--BUCKET_STAGING"  = local.names.s3_staging
+        },
+        var.dynamodb_reconocer_master_table != "" ? { "--TABLE_BASE_ONLINE" = var.dynamodb_reconocer_master_table } : {}
+      )
     }
   }
 

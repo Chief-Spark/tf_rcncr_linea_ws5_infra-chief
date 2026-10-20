@@ -51,6 +51,22 @@ data "aws_iam_policy_document" "facturacion_queue" {
     }
   }
 
+  # RecMicroservicios (misma cuenta) publica en la cola: basta con la queue
+  # policy, sin tocar su rol (que no administra este repo).
+  dynamic "statement" {
+    for_each = data.aws_lambda_function.recmicroservicios
+    content {
+      sid       = "AllowRecMicroserviciosProducer"
+      actions   = ["sqs:SendMessage", "sqs:GetQueueAttributes", "sqs:GetQueueUrl"]
+      resources = [aws_sqs_queue.facturacion.arn]
+
+      principals {
+        type        = "AWS"
+        identifiers = [statement.value.role]
+      }
+    }
+  }
+
   dynamic "statement" {
     for_each = length(var.facturacion_consumer_principal_arns) > 0 ? [1] : []
     content {
