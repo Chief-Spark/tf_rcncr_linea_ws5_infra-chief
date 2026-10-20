@@ -7,10 +7,11 @@
 module "s3_triggers" {
   source = "git::https://code.experian.local/scm/EUCES/eits-tf-aws-s3.git?ref=2.19.2"
 
-  prefix        = local.name_prefix
-  bucket_name   = "triggers-reconocer" # => dev-647096294147-rcncr-ws5-triggers-reconocer-s3
-  sse_algorithm = local.kms_key_arn == null ? "AES256" : "aws:kms"
-  kms_key_arn   = local.kms_key_arn
+  prefix                  = local.name_prefix
+  bucket_name             = "triggers-reconocer" # => dev-647096294147-rcncr-ws5-triggers-reconocer-s3
+  sse_algorithm           = local.kms_key_arn == null ? "AES256" : "aws:kms"
+  kms_key_arn             = local.kms_key_arn
+  disable_source_ip_check = var.s3_disable_source_ip_check
 
   tags = local.default_tags
 }
@@ -25,10 +26,11 @@ resource "aws_s3_bucket_notification" "triggers" {
 module "s3_staging" {
   source = "git::https://code.experian.local/scm/EUCES/eits-tf-aws-s3.git?ref=2.19.2"
 
-  prefix        = local.name_prefix
-  bucket_name   = "upload-staging" # => dev-647096294147-rcncr-ws5-upload-staging-s3
-  sse_algorithm = local.kms_key_arn == null ? "AES256" : "aws:kms"
-  kms_key_arn   = local.kms_key_arn
+  prefix                  = local.name_prefix
+  bucket_name             = "upload-staging" # => dev-647096294147-rcncr-ws5-upload-staging-s3
+  sse_algorithm           = local.kms_key_arn == null ? "AES256" : "aws:kms"
+  kms_key_arn             = local.kms_key_arn
+  disable_source_ip_check = var.s3_disable_source_ip_check
 
   tags = local.default_tags
 }

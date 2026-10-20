@@ -84,8 +84,11 @@ provisional: confirmarlo con desarrollo.
 
 ### Bucket policy de eits-tf-aws-s3
 La libreria niega el acceso a S3 fuera de IPs de Experian / VPC endpoints. Glue,
-la Step Function y la Lambda Validation llaman a S3 desde la red de AWS, por eso
-sus roles llevan el tag `eec:SourceIPException` (`s3_source_ip_exception`).
+la Step Function, la Lambda Validation y Redshift llaman a S3 desde la red de
+AWS, por eso nuestros buckets usan `disable_source_ip_check = true`
+(`s3_disable_source_ip_check`); se mantienen HTTPS/TLS 1.2 y el control por IAM.
+El tag `eec:SourceIPException` en los roles NO es opcion: una SCP niega
+`iam:TagRole` con ese tag (build 74279).
 
 ### Pendiente
 - Nombres de las tablas DynamoDB (sin ellos los roles se crean sin acceso a DynamoDB).

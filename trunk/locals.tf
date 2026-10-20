@@ -62,8 +62,9 @@ locals {
   glue_script_location = coalesce(var.glue_script_location, "s3://${local.names.s3_staging}/glue-scripts/recmas_transform_and_upload.py")
   glue_script_bucket   = split("/", trimprefix(local.glue_script_location, "s3://"))[0]
 
-  # Excepcion a la bucket policy de eits-tf-aws-s3 para los roles que llaman a
-  # S3 desde la red de AWS (ver var.s3_source_ip_exception).
+  # Tag de excepcion a la bucket policy de eits-tf-aws-s3. Desactivado por
+  # defecto: una SCP niega iam:TagRole con eec:SourceIPException (build 74279).
+  # Ver var.s3_disable_source_ip_check.
   s3_exception_tags = var.s3_source_ip_exception ? { "eec:SourceIPException" = "true" } : {}
 
   default_tags = {

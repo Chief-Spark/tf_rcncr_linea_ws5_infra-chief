@@ -24,9 +24,11 @@ recmicroservicios_function_name = ""
 # CMK que cifra S3/SQS/logs. Vacio = cifrado administrado por AWS (SSE-S3 / SSE-SQS).
 kms_key_arn = ""
 
-# Tag eec:SourceIPException en los roles de Glue, Step Function y Validation para
-# pasar la bucket policy de eits-tf-aws-s3 (llaman a S3 desde la red de AWS).
-s3_source_ip_exception = true
+# Glue, Step Function, Validation y Redshift llaman a S3 desde la red de AWS: se
+# desactiva la regla de IPs de origen de eits-tf-aws-s3 en nuestros buckets.
+# (El tag eec:SourceIPException en los roles lo niega una SCP: build 74279.)
+s3_disable_source_ip_check = true
+s3_source_ip_exception     = false
 
 # --- Lambdas ---
 # Se crean con un paquete placeholder; el codigo real lo publica el pipeline de

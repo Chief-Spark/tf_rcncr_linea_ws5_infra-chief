@@ -79,14 +79,21 @@ variable "kms_key_arn" {
   default     = ""
 }
 
-variable "s3_source_ip_exception" {
+variable "s3_disable_source_ip_check" {
   description = <<EOF
-  La bucket policy de eits-tf-aws-s3 niega el acceso fuera de IPs de Experian / VPC endpoints. Glue, la Step Function
-  y la Lambda Validation llaman a S3 desde la red de AWS, asi que sus roles llevan el tag eec:SourceIPException
-  (excepcion prevista por la libreria). Poner false si se usa VPC + gateway endpoint de S3.
+  La bucket policy por defecto de eits-tf-aws-s3 niega el acceso fuera de IPs de Experian / VPC endpoints. Glue, la
+  Step Function, la Lambda Validation y Redshift llaman a S3 desde la red de AWS, asi que se desactiva esa regla en los
+  buckets de este stack (la libreria lo deja registrado con el tag eitsce:sourceipcheck=disabled). Se mantienen la
+  exigencia de HTTPS/TLS 1.2 y el control de acceso por IAM.
   EOF
   type        = bool
   default     = true
+}
+
+variable "s3_source_ip_exception" {
+  description = "Tag eec:SourceIPException en los roles. NO usar en la 147: una SCP niega iam:TagRole con ese tag (build 74279)."
+  type        = bool
+  default     = false
 }
 
 # --- Lambdas (el codigo vive en otros repos; aqui solo se apunta al paquete en S3) ---
