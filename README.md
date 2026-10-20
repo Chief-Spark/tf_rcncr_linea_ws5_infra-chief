@@ -99,7 +99,16 @@ AWS, por eso nuestros buckets usan `disable_source_ip_check = true`
 El tag `eec:SourceIPException` en los roles NO es opcion: una SCP niega
 `iam:TagRole` con ese tag (build 74279).
 
+### Estado del despliegue (develop)
+Build 74281 OK: todos los componentes creados. API `bg2kuoleug` (PRIVATE), stage
+`dev`; desde la VPC del endpoint:
+`https://bg2kuoleug-vpce-099b9bad5f18ee5a1.execute-api.us-east-1.amazonaws.com/dev`.
+Las Lambdas siguen con el placeholder, asi que toda llamada al API falla hasta
+publicar el codigo real. Historial de builds y lecciones:
+[docs/APRENDIZAJES-DESPLIEGUE-LINEA.md](docs/APRENDIZAJES-DESPLIEGUE-LINEA.md).
+
 ### Pendiente
+- Re-ejecutar el build y confirmar que el plan sale "No changes" (idempotencia).
 - Nombres de las tablas DynamoDB (sin ellos los roles se crean sin acceso a DynamoDB).
 - Asociar el rol `redshift-unload` al namespace del Redshift Reconocer (lo hace quien administra el namespace).
 - ARN del rol IAM del Redshift Bureau (`redshift_bureau_role_arn`) y, en su cuenta, `sts:AssumeRole` sobre `redshift-copy-xacct`.
@@ -110,3 +119,6 @@ El tag `eec:SourceIPException` en los roles NO es opcion: una SCP niega
 - SnapStart para RecLineaCloud: la libreria eits-tf-aws-lambda aun no lo soporta.
 - Script del Glue publicado por su repo en `s3://<upload-staging>/glue-scripts/` (o `glue_script_location`).
 - Definicion de la Step Function: borrador segun el HLD, validar con desarrollo.
+- CMK de KMS (`kms_key_arn`), opcional: quita el warning Wiz Serverless-010 de las env vars de las Lambdas.
+- Permiso de `devsecops-sa-jenkins` para comentar en el issue Jira (hoy falla el comentario automatico de Wiz/despliegue; no bloquea).
+- Repetir el despliegue en qa / demo / production (`terraform.tfvars` de cada ambiente).
