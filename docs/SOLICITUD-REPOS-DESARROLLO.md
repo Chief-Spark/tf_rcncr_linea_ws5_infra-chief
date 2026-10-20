@@ -31,7 +31,7 @@ LAMBDA-ZIP es la combinacion valida para Lambdas Python (no existe LAMBDA-PYTHON
 
 ---
 
-## Ticket 1 — RecLineaCloud
+## Ticket 1 — RecLineaCloud (RITM5307356)
 
 ```
 Buenos dias, solicito la creacion del siguiente repositorio en Bitbucket:
@@ -52,7 +52,7 @@ publica el codigo en la funcion dev-647096294147-rcncr-ws5-reclineacloud-lambda.
 Gracias
 ```
 
-## Ticket 2 — Lambda Authorizer
+## Ticket 2 — Lambda Authorizer (RITM5307364)
 
 ```
 Buenos dias, solicito la creacion del siguiente repositorio en Bitbucket:
@@ -73,7 +73,7 @@ publica el codigo en la funcion dev-647096294147-rcncr-ws5-authorizer-lambda.
 Gracias
 ```
 
-## Ticket 3 — Validation
+## Ticket 3 — Validation (RITM5307368)
 
 ```
 Buenos dias, solicito la creacion del siguiente repositorio en Bitbucket:
@@ -94,7 +94,7 @@ publica el codigo en la funcion dev-647096294147-rcncr-ws5-validation-lambda.
 Gracias
 ```
 
-## Ticket 4 — Glue RecMas_Transform_and_Upload
+## Ticket 4 — Glue RecMas_Transform_and_Upload (RITM5307372)
 
 ```
 Buenos dias, solicito la creacion del siguiente repositorio en Bitbucket:
@@ -120,5 +120,12 @@ Gracias
 
 ## Seguimiento
 
-Al radicar, anotar el numero de ticket en la columna **Ticket** de
-`INVENTARIO-IAC-Y-REPOS.md` (seccion 1).
+| # | Repo | Combinacion | Ticket | Estado |
+|---|---|---|---|---|
+| 1 | `A_RCNCR_LN_RCLNCLD` | AWS – LAMBDA-JAVA | RITM5307356 | Radicado |
+| 2 | `A_RCNCR_LN_ATHRZR` | AWS – LAMBDA-ZIP | RITM5307364 | Radicado |
+| 3 | `A_RCNCR_LN_VLDTN` | AWS – LAMBDA-ZIP | RITM5307368 | Radicado |
+| 4 | `A_RCNCR_LN_RCMS_TRNSFRM` | AWS – GLUE-PYTHON | RITM5307372 | Radicado |
+
+Cuando DevSecOps cree cada repo, cambiar el estado aqui y en la columna
+**Ticket** de `INVENTARIO-IAC-Y-REPOS.md` (seccion 1).

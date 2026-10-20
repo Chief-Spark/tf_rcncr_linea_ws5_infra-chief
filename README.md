@@ -116,7 +116,7 @@ Inventario de lo desplegado y repo de desarrollo de cada componente:
 - ARN del rol IAM del Redshift Bureau (`redshift_bureau_role_arn`) y, en su cuenta, `sts:AssumeRole` sobre `redshift-copy-xacct`.
 - ARN del rol consumidor de facturacion (otra cuenta).
 - Handler real de RecLineaCloud (y runtime/handler de las Python si difieren del default).
-- Radicar los 4 repos de desarrollo ([docs/SOLICITUD-REPOS-DESARROLLO.md](docs/SOLICITUD-REPOS-DESARROLLO.md)) y su permiso `lambda:UpdateFunctionCode` / `s3:PutObject` de despliegue.
+- Creacion de los 4 repos de desarrollo, radicados como RITM5307356, RITM5307364, RITM5307368 y RITM5307372 ([docs/SOLICITUD-REPOS-DESARROLLO.md](docs/SOLICITUD-REPOS-DESARROLLO.md)), y su permiso `lambda:UpdateFunctionCode` / `s3:PutObject` de despliegue.
 - Nombre de la Lambda RecMicroservicios (ruta Ext del API).
 - SnapStart para RecLineaCloud: la libreria eits-tf-aws-lambda aun no lo soporta.
 - Script del Glue publicado por su repo en `s3://<upload-staging>/glue-scripts/` (o `glue_script_location`).
