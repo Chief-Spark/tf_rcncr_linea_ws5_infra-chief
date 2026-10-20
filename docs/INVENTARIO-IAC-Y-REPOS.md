@@ -16,7 +16,7 @@
 
 | # | Componente (HLD) | Recurso AWS desplegado (develop) | Archivo IaC | Rol IAM | Repo de desarrollo | Ticket |
 |---|---|---|---|---|---|---|
-| 1 | RecLineaCloud | Lambda `dev-647096294147-rcncr-ws5-reclineacloud-lambda` (java21) | `lambda.tf` | `BURoleFor-dev-647096294147-rcncr-ws5-lmbd-reclineacloud` | `A_RCNCR_LN_RCLNCLD` (AWS – LAMBDA-JAVA) | pendiente |
+| 1 | RecLineaCloud | Lambda `dev-647096294147-rcncr-ws5-reclineacloud-lambda` (python3.13) | `lambda.tf` | `BURoleFor-dev-647096294147-rcncr-ws5-lmbd-reclineacloud` | `A_RCNCR_LN_RCLNCLD` (AWS – LAMBDA-ZIP) | pendiente |
 | 2 | Lambda Authorizer (Okta) | Lambda `dev-647096294147-rcncr-ws5-authorizer-lambda` (python3.13) | `lambda.tf` | `BURoleFor-dev-647096294147-rcncr-ws5-lmbd-authorizer` | `A_RCNCR_LN_ATHRZR` (AWS – LAMBDA-ZIP) | pendiente |
 | 3 | Validation | Lambda `dev-647096294147-rcncr-ws5-validation-lambda` (python3.13) | `lambda.tf` | `BURoleFor-dev-647096294147-rcncr-ws5-lmbd-validation` | `A_RCNCR_LN_VLDTN` (AWS – LAMBDA-ZIP) | pendiente |
 | 4 | RecMas_Transform_and_Upload | Glue Job `dev-647096294147-rcncr-ws5-recmas-transform-upload` (Glue 5.0) | `glue.tf` | `BURoleFor-dev-647096294147-rcncr-ws5-glue-transform` | `A_RCNCR_LN_RCMS_TRNSFRM` (AWS – GLUE-PYTHON) | pendiente |
@@ -56,10 +56,10 @@ Terraform no fija `source_code_hash`.
 
 ## 3. Contrato por repo de desarrollo
 
-### 3.1 `A_RCNCR_LN_RCLNCLD` — RecLineaCloud (Java)
+### 3.1 `A_RCNCR_LN_RCLNCLD` — RecLineaCloud (Python)
 - Publica en: `<stage>-647096294147-rcncr-ws5-reclineacloud-lambda`.
-- Runtime `java21`, handler `com.experian.reconocer.linea.Handler::handleRequest`
-  (**provisional**: desarrollo confirma el real y se ajusta en `var.lambdas`).
+- Runtime `python3.13`, handler `handler.lambda_handler` (si el codigo usa otro
+  modulo/funcion, se ajusta en `var.lambdas`). El HLD (ADR-08) proponia Java 21.
 - 2048 MB, timeout 29 s (limite de integracion del API), concurrencia 50.
 - Invocada por el API: `GET /v1/sujetos/{tipo}/{numero}/reporte/{perfil}`
   (integracion `AWS_PROXY`), tras el Authorizer.
