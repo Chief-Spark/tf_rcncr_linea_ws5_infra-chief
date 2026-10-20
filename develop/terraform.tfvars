@@ -50,10 +50,8 @@ reclinea_output_bucket = ""
 facturacion_consumer_principal_arns = []
 
 # --- Triggers_reconocer ---
-# PENDIENTE: ARN del ROL IAM (no del namespace) asociado al Redshift Reconocer
-# (namespace 8eac1c32-7d63-4570-9906-334aa9903dc5) que hace el UNLOAD.
-triggers_writer_principal_arns = []
-
-# PENDIENTE: ARN del ROL IAM del Redshift Bureau (cuenta Procesos Batch) que hace
-# el COPY desde este bucket.
-triggers_reader_principal_arns = []
+# El rol redshift-unload se crea siempre; asociarlo al namespace del Redshift
+# Reconocer (8eac1c32-7d63-4570-9906-334aa9903dc5) fuera de este repo.
+# PENDIENTE: ARN del rol IAM del Redshift Bureau (cuenta Procesos Batch) que hace
+# el COPY. Vacio = no se crea el rol redshift-copy-xacct.
+redshift_bureau_role_arn = ""

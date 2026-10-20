@@ -7,6 +7,8 @@ output "role_arns" {
     glue_transform       = module.glue_transform_role.role_arn
     sfn_updrecmaster     = module.sfn_updrecmaster_role.role_arn
     evb_updrecmaster     = module.evb_updrecmaster_role.role_arn
+    redshift_unload      = module.redshift_unload_role.role_arn
+    redshift_copy_xacct  = try(module.redshift_copy_role[0].role_arn, null)
   }
 }
 

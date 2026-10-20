@@ -48,6 +48,7 @@ valores son opcionales: si estan vacios se omite el permiso o la ruta asociada.
 | `stepfunctions.tf` | Step Function Update RecMaster (Distributed Map) | nativo |
 | `eventbridge.tf` | Regla EventBridge Update (manifiesto -> Step Function) | `eits-tf-aws-eventbridge` 2.7.0 |
 | `iam-*.tf` | Un rol por componente | `eits-tf-aws-iam` 1.9.7 |
+| `iam-redshift.tf` | Roles de Redshift: UNLOAD (Reconocer) y COPY cross-account por role chaining (Bureau) | `eits-tf-aws-iam` 1.9.7 |
 
 Las librerias exigen AWS provider 6.x (`provider.tf`: `~> 6.48`).
 
@@ -73,7 +74,8 @@ sus roles llevan el tag `eec:SourceIPException` (`s3_source_ip_exception`).
 
 ### Pendiente
 - Nombres de las tablas DynamoDB (sin ellos los roles se crean sin acceso a DynamoDB).
-- ARN del rol IAM del Redshift Reconocer (UNLOAD) y del Redshift Bureau (COPY, cuenta Procesos Batch).
+- Asociar el rol `redshift-unload` al namespace del Redshift Reconocer (lo hace quien administra el namespace).
+- ARN del rol IAM del Redshift Bureau (`redshift_bureau_role_arn`) y, en su cuenta, `sts:AssumeRole` sobre `redshift-copy-xacct`.
 - ARN del rol consumidor de facturacion (otra cuenta).
 - Fase 2: paquetes y runtimes de las Lambdas Authorizer, RecLineaCloud y Validation;
   nombre de la Lambda RecMicroservicios.

@@ -164,16 +164,10 @@ variable "facturacion_max_receive_count" {
 }
 
 # --- Triggers_reconocer ---
-variable "triggers_writer_principal_arns" {
-  description = "ARNs de los roles IAM que escriben el UNLOAD + manifiesto en Triggers_reconocer (rol del Redshift Reconocer, cuenta 147)."
-  type        = list(string)
-  default     = []
-}
-
-variable "triggers_reader_principal_arns" {
-  description = "ARNs de los roles IAM que leen Triggers_reconocer (COPY del Redshift Bureau, cuenta Procesos Batch)."
-  type        = list(string)
-  default     = []
+variable "redshift_bureau_role_arn" {
+  description = "ARN del rol IAM asociado al Redshift Bureau (cuenta Procesos Batch) que hace el COPY. Vacio = no se crea el rol redshift-copy-xacct."
+  type        = string
+  default     = ""
 }
 
 variable "manifest_key_suffix" {
