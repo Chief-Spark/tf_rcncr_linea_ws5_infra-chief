@@ -32,7 +32,7 @@ data "aws_iam_policy_document" "lambda_validation" {
 }
 
 module "lambda_validation_role" {
-  source = "git::https://code.experian.local/scm/EUCES/eits-tf-aws-iam.git?ref=1.9.1"
+  source = "git::https://code.experian.local/scm/EUCES/eits-tf-aws-iam.git?ref=1.9.7"
 
   create_role          = var.enable_create_role
   role_name            = "-${local.name_prefix}-lmbd-validation" # BURoleFor-dev-647096294147-rcncr-ws5-lmbd-validation
@@ -44,5 +44,5 @@ module "lambda_validation_role" {
   policy_description = "S3 staging read and Control table write for the Validation Lambda"
   policy_documents   = [data.aws_iam_policy_document.lambda_validation.json]
 
-  tags = local.default_tags
+  tags = merge(local.default_tags, local.s3_exception_tags)
 }

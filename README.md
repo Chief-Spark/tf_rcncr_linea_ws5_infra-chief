@@ -29,33 +29,49 @@ Los archivos .tf dentro de estas carpetas provienen de trunk/ durante el pipelin
 
 ## Stack actual: Reconocer Master Linea (cuenta 147 = `647096294147`)
 
-Despliega solo IaC (el codigo de Lambdas y Glue vive en otros repos) de los
-componentes del HLD *Reconocer Master Cloud - Consumo en linea* marcados para
-este repo. Las tablas DynamoDB (Base_Online / Metadata & Control) **no** se
-crean aqui: se referencian por nombre (`dynamodb.tf`).
+Solo IaC: el codigo de Lambdas y Glue vive en otros repos. **No** se despliegan
+aqui las tablas DynamoDB (Base_Online / Metadata & Control), la Lambda
+RecMicroservicios ni la Lambda de Facturacion (vive en otra cuenta): se
+referencian por nombre o ARN.
+
+### Componentes
+
+| Archivo | Componente | Libreria |
+|---|---|---|
+| `s3.tf` | Buckets Triggers_reconocer (notifica a EventBridge) y Upload_Staging | `eits-tf-aws-s3` 2.19.2 |
+| `sqs.tf` | SQS FIFO de facturacion + DLQ (consumidor cross-account) | nativo |
+| `lambda.tf` | Lambdas Authorizer, RecLineaCloud y Validation | `eits-tf-aws-lambda` 1.11.2 |
+| `apigateway.tf` | API REST privado: Int -> RecLineaCloud, Ext -> RecMicroservicios | `eits-tf-aws-api-gateway` 1.4.2 |
+| `glue.tf` | Glue Job RecMas_Transform_and_Upload | `eits-tf-aws-glue` 1.5.1 |
+| `stepfunctions.tf` | Step Function Update RecMaster (Distributed Map) | nativo |
+| `eventbridge.tf` | Regla EventBridge Update (manifiesto -> Step Function) | `eits-tf-aws-eventbridge` 2.7.0 |
+| `iam-*.tf` | Un rol por componente | `eits-tf-aws-iam` 1.9.7 |
+
+Las librerias exigen AWS provider 6.x (`provider.tf`: `~> 6.48`).
 
 ### Nomenclatura
 `name_prefix = <stage>-<accountId>-<project>` -> `dev-647096294147-rcncr-ws5`.
-Los roles se crean con `eits-tf-aws-iam` (`?ref=1.9.1`, Terraform >= 1.9) pasando
-`role_name` con guion inicial, lo que produce `BURoleFor-dev-647096294147-rcncr-ws5-<sufijo>`.
 
-### Roles (fase 1)
+- Roles: `BURoleFor-dev-647096294147-rcncr-ws5-<sufijo>`. Se crean con
+  `eits-tf-aws-iam` (guion inicial en `role_name`) y se pasan a cada libreria,
+  porque los roles que crean las librerias no siguen esta nomenclatura.
+- Los nombres de recursos que arman las librerias (`-lambda`, `-s3`, `-event`,
+  `-api`) se replican en `locals.tf`, para que los roles apunten a ARNs
+  deterministicos.
 
-| Archivo | Rol (sufijo) | Componente |
-|---|---|---|
-| `iam-lambda-authorizer.tf` | `lmbd-authorizer` | Lambda Authorizer (Okta) |
-| `iam-lambda-reclineacloud.tf` | `lmbd-reclineacloud` | Lambda RecLineaCloud |
-| `iam-lambda-facturacion.tf` | `lmbd-facturacion` | Lambda Facturacion (consume SQS FIFO) |
-| `iam-lambda-validation.tf` | `lmbd-validation` | Lambda Validation |
-| `iam-glue-transform.tf` | `glue-transform` | Glue Job RecMas_Transform_and_Upload |
-| `iam-sfn-updrecmaster.tf` | `sfn-updrecmaster` | Step Function Update RecMaster (Distributed Map) |
-| `iam-evb-updrecmaster.tf` | `evb-updrecmaster` | Regla EventBridge Update |
+### Despliegue por fases
+1. `enable_lambdas = false`: roles, buckets, SQS, Glue, Step Function y EventBridge.
+2. `enable_lambdas = true` cuando los paquetes de codigo esten en S3 (`var.lambdas`):
+   Lambdas + API Gateway.
 
-Los roles apuntan a ARNs deterministicos (`locals.tf` -> `names` / `arns`), asi
-que se pueden crear antes que los recursos.
+### Bucket policy de eits-tf-aws-s3
+La libreria niega el acceso a S3 fuera de IPs de Experian / VPC endpoints. Glue,
+la Step Function y la Lambda Validation llaman a S3 desde la red de AWS, por eso
+sus roles llevan el tag `eec:SourceIPException` (`s3_source_ip_exception`).
 
 ### Pendiente
-- Nombres de las tablas DynamoDB en `develop/terraform.tfvars` (el plan falla sin ellos).
-- CMK (KMS), VPC de Lambdas y bucket de salida de PDFs (variables opcionales).
-- Recursos: API Gateway, Lambdas, SQS FIFO + DLQ, S3, EventBridge, Glue Job y
-  Step Function (segun las librerias que se confirmen).
+- Nombres de las tablas DynamoDB (el plan falla sin ellos).
+- ARN del rol consumidor de facturacion (otra cuenta) y del rol de Redshift que escribe en Triggers.
+- Paquetes de las Lambdas y nombre de la Lambda RecMicroservicios (fase 2).
+- Script del Glue en `s3://<upload-staging>/glue-scripts/` (o `glue_script_location`).
+- Definicion de la Step Function: borrador segun el HLD, validar con desarrollo.

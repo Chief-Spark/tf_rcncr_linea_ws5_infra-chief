@@ -81,7 +81,7 @@ data "aws_iam_policy_document" "sfn_updrecmaster" {
 }
 
 module "sfn_updrecmaster_role" {
-  source = "git::https://code.experian.local/scm/EUCES/eits-tf-aws-iam.git?ref=1.9.1"
+  source = "git::https://code.experian.local/scm/EUCES/eits-tf-aws-iam.git?ref=1.9.7"
 
   create_role          = var.enable_create_role
   role_name            = "-${local.name_prefix}-sfn-updrecmaster" # BURoleFor-dev-647096294147-rcncr-ws5-sfn-updrecmaster
@@ -93,5 +93,5 @@ module "sfn_updrecmaster_role" {
   policy_description = "Glue, Lambda, S3 and Control table access for the Update RecMaster Step Function"
   policy_documents   = [data.aws_iam_policy_document.sfn_updrecmaster.json]
 
-  tags = local.default_tags
+  tags = merge(local.default_tags, local.s3_exception_tags)
 }

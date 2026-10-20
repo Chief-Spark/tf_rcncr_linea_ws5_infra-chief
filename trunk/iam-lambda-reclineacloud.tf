@@ -35,7 +35,7 @@ data "aws_iam_policy_document" "lambda_reclineacloud" {
 }
 
 module "lambda_reclineacloud_role" {
-  source = "git::https://code.experian.local/scm/EUCES/eits-tf-aws-iam.git?ref=1.9.1"
+  source = "git::https://code.experian.local/scm/EUCES/eits-tf-aws-iam.git?ref=1.9.7"
 
   create_role          = var.enable_create_role
   role_name            = "-${local.name_prefix}-lmbd-reclineacloud" # BURoleFor-dev-647096294147-rcncr-ws5-lmbd-reclineacloud

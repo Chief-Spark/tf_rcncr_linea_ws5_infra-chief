@@ -27,6 +27,12 @@ data "aws_iam_policy_document" "glue_transform" {
   }
 
   statement {
+    sid       = "ReadScript"
+    actions   = ["s3:GetObject"]
+    resources = ["arn:aws:s3:::${local.glue_script_bucket}/*"]
+  }
+
+  statement {
     sid       = "WriteBaseOnline"
     actions   = ["dynamodb:BatchWriteItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DescribeTable"]
     resources = [local.dynamodb_reconocer_master_arn]
@@ -37,7 +43,8 @@ data "aws_iam_policy_document" "glue_transform" {
     actions = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
     resources = [
       "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws-glue/*",
-      "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws-glue/*:*"
+      "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws-glue/*:*",
+      "arn:aws:logs:${var.region}:${var.account_id}:log-group:${local.names.glue_log_group}:*"
     ]
   }
 
@@ -54,7 +61,7 @@ data "aws_iam_policy_document" "glue_transform" {
 }
 
 module "glue_transform_role" {
-  source = "git::https://code.experian.local/scm/EUCES/eits-tf-aws-iam.git?ref=1.9.1"
+  source = "git::https://code.experian.local/scm/EUCES/eits-tf-aws-iam.git?ref=1.9.7"
 
   create_role          = var.enable_create_role
   role_name            = "-${local.name_prefix}-glue-transform" # BURoleFor-dev-647096294147-rcncr-ws5-glue-transform
@@ -66,5 +73,5 @@ module "glue_transform_role" {
   policy_description = "S3 read/write and DynamoDB Base_Online write for the transform Glue job"
   policy_documents   = [data.aws_iam_policy_document.glue_transform.json]
 
-  tags = local.default_tags
+  tags = merge(local.default_tags, local.s3_exception_tags)
 }

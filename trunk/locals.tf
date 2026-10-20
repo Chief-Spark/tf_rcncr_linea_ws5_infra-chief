@@ -10,28 +10,32 @@ locals {
   name_prefix = "${local.env_short}-${var.account_id}-${var.project}"
 
   permissions_boundary_arn = "arn:aws:iam::${var.account_id}:policy/${var.permissions_boundary}"
+  kms_key_arn              = var.kms_key_arn == "" ? null : var.kms_key_arn
 
-  # Nombres de los recursos. Se definen aqui para que los roles puedan apuntar a
-  # ARNs deterministicos sin depender de que el recurso ya exista (evita ciclos,
-  # p. ej. la SFN necesita su rol y el rol necesita el ARN de la SFN).
+  # Nombres finales. Las librerias arman algunos nombres solas; aqui se replica
+  # la formula para que los roles apunten a ARNs deterministicos sin depender de
+  # que el recurso exista (evita ciclos rol <-> recurso):
+  #   lambda      -> <prefix>-<function_scope>-lambda
+  #   s3          -> <prefix>-<bucket_name>-s3
+  #   eventbridge -> <prefix>-<name>-event
+  #   api gateway -> <name>-api
   names = {
-    lambda_authorizer    = "${local.name_prefix}-lmbd-authorizer"
-    lambda_reclineacloud = "${local.name_prefix}-lmbd-reclineacloud"
-    lambda_facturacion   = "${local.name_prefix}-lmbd-facturacion"
-    lambda_validation    = "${local.name_prefix}-lmbd-validation"
-    glue_transform       = "${local.name_prefix}-glue-recmas-transform-upload"
-    sfn_updrecmaster     = "${local.name_prefix}-sfn-upd-recmaster"
-    evb_updrecmaster     = "${local.name_prefix}-evb-upd-recmaster"
-    sqs_facturacion      = "${local.name_prefix}-sqs-facturacion.fifo"
-    sqs_facturacion_dlq  = "${local.name_prefix}-sqs-facturacion-dlq.fifo"
-    s3_triggers          = "${local.name_prefix}-triggers-reconocer"
-    s3_staging           = "${local.name_prefix}-upload-staging"
+    lambda_authorizer    = "${local.name_prefix}-authorizer-lambda"
+    lambda_reclineacloud = "${local.name_prefix}-reclineacloud-lambda"
+    lambda_validation    = "${local.name_prefix}-validation-lambda"
+    glue_transform       = "${local.name_prefix}-recmas-transform-upload"
+    glue_log_group       = "/aws-glue/jobs/${local.name_prefix}-recmaster"
+    sfn_updrecmaster     = "${local.name_prefix}-upd-recmaster-sfn"
+    sqs_facturacion      = "${local.name_prefix}-facturacion.fifo"
+    sqs_facturacion_dlq  = "${local.name_prefix}-facturacion-dlq.fifo"
+    s3_triggers          = "${local.name_prefix}-triggers-reconocer-s3"
+    s3_staging           = "${local.name_prefix}-upload-staging-s3"
+    api                  = "${local.name_prefix}-reconocer-linea"
   }
 
   lambda_names = {
     authorizer    = local.names.lambda_authorizer
     reclineacloud = local.names.lambda_reclineacloud
-    facturacion   = local.names.lambda_facturacion
     validation    = local.names.lambda_validation
   }
 
@@ -45,6 +49,13 @@ locals {
     s3_triggers       = "arn:aws:s3:::${local.names.s3_triggers}"
     s3_staging        = "arn:aws:s3:::${local.names.s3_staging}"
   }
+
+  glue_script_location = coalesce(var.glue_script_location, "s3://${local.names.s3_staging}/glue-scripts/recmas_transform_and_upload.py")
+  glue_script_bucket   = split("/", trimprefix(local.glue_script_location, "s3://"))[0]
+
+  # Excepcion a la bucket policy de eits-tf-aws-s3 para los roles que llaman a
+  # S3 desde la red de AWS (ver var.s3_source_ip_exception).
+  s3_exception_tags = var.s3_source_ip_exception ? { "eec:SourceIPException" = "true" } : {}
 
   default_tags = {
     Environment = var.environment

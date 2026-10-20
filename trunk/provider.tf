@@ -3,8 +3,13 @@ terraform {
 
   required_providers {
     aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.51.1"
+      source = "hashicorp/aws"
+      # Las librerias eits-tf-aws-* exigen provider 6.x (lambda >= 6.48.0).
+      version = "~> 6.48"
+    }
+    time = {
+      source  = "hashicorp/time"
+      version = ">= 0.9.1"
     }
   }
 }

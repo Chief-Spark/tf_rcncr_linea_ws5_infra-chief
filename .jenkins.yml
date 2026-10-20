@@ -14,7 +14,7 @@ develop:
       projectKey: SP-LATAM:EITS:DevSecOp:29197_Procesos-Especiales-Batch-AWS
       projectName: SP-LATAM:EITS:DevSecOp:29197_Procesos-Especiales-Batch-AWS
       projectVersion: 1.0
-      terraform.provider.aws.version: 5.51.1
+      terraform.provider.aws.version: 6.48.0
   deploy:
     terraform:
       accountid: 647096294147
