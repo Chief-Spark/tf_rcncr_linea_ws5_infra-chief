@@ -62,10 +62,19 @@ Las librerias exigen AWS provider 6.x (`provider.tf`: `~> 6.48`).
   `-api`) se replican en `locals.tf`, para que los roles apunten a ARNs
   deterministicos.
 
-### Despliegue por fases
-1. `enable_lambdas = false`: roles, buckets, SQS, Glue, Step Function y EventBridge.
-2. `enable_lambdas = true` cuando los paquetes de codigo esten en S3 (`var.lambdas`):
-   Lambdas + API Gateway.
+### Codigo de las Lambdas (placeholder)
+Las Lambdas se crean con `trunk/placeholder/lambda-placeholder.zip` (ver su README)
+y el pipeline de cada repo de codigo publica la version real con
+`aws lambda update-function-code`. Reparto de responsabilidades:
+
+| Que | Donde |
+|---|---|
+| Codigo de la Lambda | Repo de codigo (su pipeline) |
+| runtime, handler, memoria, timeout, concurrencia, env vars, rol, VPC | Este repo (`lambda.tf`, `var.lambdas`) |
+
+Defaults: RecLineaCloud `java21` (HLD, ADR-08); Authorizer y Validation
+`python3.13` con `handler.lambda_handler`. El handler de RecLineaCloud es
+provisional: confirmarlo con desarrollo.
 
 ### Bucket policy de eits-tf-aws-s3
 La libreria niega el acceso a S3 fuera de IPs de Experian / VPC endpoints. Glue,
@@ -77,7 +86,9 @@ sus roles llevan el tag `eec:SourceIPException` (`s3_source_ip_exception`).
 - Asociar el rol `redshift-unload` al namespace del Redshift Reconocer (lo hace quien administra el namespace).
 - ARN del rol IAM del Redshift Bureau (`redshift_bureau_role_arn`) y, en su cuenta, `sts:AssumeRole` sobre `redshift-copy-xacct`.
 - ARN del rol consumidor de facturacion (otra cuenta).
-- Fase 2: paquetes y runtimes de las Lambdas Authorizer, RecLineaCloud y Validation;
-  nombre de la Lambda RecMicroservicios.
+- Handler real de RecLineaCloud (y runtime/handler de las Python si difieren del default).
+- Permiso `lambda:UpdateFunctionCode` para el pipeline de cada repo de codigo.
+- Nombre de la Lambda RecMicroservicios (ruta Ext del API).
+- SnapStart para RecLineaCloud: la libreria eits-tf-aws-lambda aun no lo soporta.
 - Script del Glue publicado por su repo en `s3://<upload-staging>/glue-scripts/` (o `glue_script_location`).
 - Definicion de la Step Function: borrador segun el HLD, validar con desarrollo.

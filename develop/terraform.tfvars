@@ -29,14 +29,16 @@ kms_key_arn = ""
 s3_source_ip_exception = true
 
 # --- Lambdas ---
-# false hasta que los paquetes de codigo (otros repos) esten en S3.
-enable_lambdas = false
-
+# Se crean con un paquete placeholder; el codigo real lo publica el pipeline de
+# cada repo de codigo (update-function-code). Defaults en trunk/lambda.tf:
+#   authorizer    python3.13  handler.lambda_handler
+#   reclineacloud java21      com.experian.reconocer.linea.Handler::handleRequest  (CONFIRMAR)
+#   validation    python3.13  handler.lambda_handler
+# runtime y handler deben coincidir con el codigo real. Solo definir lo que cambie:
 # lambdas = {
-#   authorizer    = { runtime = "<POR_CONFIRMAR>", handler = "<POR_CONFIRMAR>", s3_bucket = "<POR_CONFIRMAR>", s3_key = "<POR_CONFIRMAR>" }
-#   reclineacloud = { runtime = "java21", handler = "<POR_CONFIRMAR>", s3_bucket = "<POR_CONFIRMAR>", s3_key = "<POR_CONFIRMAR>", memory_size = 2048, timeout = 29, reserved_concurrent_executions = 50 }
-#   validation    = { runtime = "<POR_CONFIRMAR>", handler = "<POR_CONFIRMAR>", s3_bucket = "<POR_CONFIRMAR>", s3_key = "<POR_CONFIRMAR>", timeout = 300 }
+#   reclineacloud = { handler = "<paquete.Clase>::handleRequest" }
 # }
+enable_lambdas = true
 
 # null = fuera de VPC.
 # lambda_vpc_config = { security_group_ids = ["sg-..."], subnet_ids = ["subnet-...", "subnet-..."] }

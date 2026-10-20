@@ -91,28 +91,30 @@ variable "s3_source_ip_exception" {
 
 # --- Lambdas (el codigo vive en otros repos; aqui solo se apunta al paquete en S3) ---
 variable "enable_lambdas" {
-  description = "Crea las Lambdas y el API Gateway. Dejar en false hasta que los paquetes de codigo existan en S3."
+  description = "Crea las Lambdas y el API Gateway. Interruptor para desactivarlos si hiciera falta."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "lambdas" {
-  description = "Configuracion por Lambda. Claves esperadas: authorizer, reclineacloud, validation."
+  description = <<EOF
+  Ajustes por Lambda (claves: authorizer, reclineacloud, validation). Todo es opcional: lo omitido toma el
+  default de lambda.tf. runtime y handler deben coincidir con el codigo real que publica el repo de codigo:
+  update-function-code solo cambia el codigo, la configuracion la mantiene este repo.
+  EOF
   type = map(object({
-    runtime                        = string
-    handler                        = string
-    s3_bucket                      = string
-    s3_key                         = string
-    memory_size                    = optional(number, 512)
-    timeout                        = optional(number, 30)
-    reserved_concurrent_executions = optional(number, 5)
+    runtime                        = optional(string)
+    handler                        = optional(string)
+    memory_size                    = optional(number)
+    timeout                        = optional(number)
+    reserved_concurrent_executions = optional(number)
     environment_variables          = optional(map(string), {})
   }))
   default = {}
 
   validation {
-    condition     = !var.enable_lambdas || alltrue([for k in ["authorizer", "reclineacloud", "validation"] : contains(keys(var.lambdas), k)])
-    error_message = "Con enable_lambdas = true, var.lambdas debe definir authorizer, reclineacloud y validation."
+    condition     = alltrue([for k in keys(var.lambdas) : contains(["authorizer", "reclineacloud", "validation"], k)])
+    error_message = "Las claves de var.lambdas deben ser authorizer, reclineacloud o validation."
   }
 }
 
