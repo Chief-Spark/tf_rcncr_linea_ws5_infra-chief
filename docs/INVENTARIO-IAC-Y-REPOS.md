@@ -62,7 +62,8 @@ Terraform no fija `source_code_hash`.
   (**provisional**: desarrollo confirma el real y se ajusta en `var.lambdas`).
 - 2048 MB, timeout 29 s (limite de integracion del API), concurrencia 50.
 - Invocada por el API: `GET /v1/sujetos/{tipo}/{numero}/reporte/{perfil}`
-  (integracion `AWS_PROXY`), tras el Authorizer.
+  (integracion `AWS_PROXY`). Consumidor: Portal Reconocer, sin authorizer (API
+  PRIVATE, solo entra por el VPC endpoint).
 - Variables de entorno que entrega la IaC:
   - `SQS_FACTURACION_URL`: cola FIFO de facturacion (envia `MessageGroupId`).
   - Nombres de tablas DynamoDB (cuando se informen en `terraform.tfvars`).
@@ -72,6 +73,9 @@ Terraform no fija `source_code_hash`.
 ### 3.2 `A_RCNCR_LN_ATHRZR` — Lambda Authorizer (Python)
 - Publica en: `<stage>-647096294147-rcncr-ws5-authorizer-lambda`.
 - Runtime `python3.13`, handler `handler.lambda_handler`, 256 MB, 10 s.
+- Protege **solo el API Ext** (accesos desde Apigee, ruta
+  `POST /v1/microservicios/{operacion}`); el API Int no lo usa. Se asocia al API
+  cuando se configura `recmicroservicios_function_name`.
 - Authorizer tipo **TOKEN**: recibe el header `Authorization` (JWT Okta) y debe
   devolver una policy IAM (`Allow`/`Deny` sobre `execute-api:Invoke`). Cache de
   resultado: 300 s.

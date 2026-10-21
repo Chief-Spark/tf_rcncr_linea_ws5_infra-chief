@@ -1,6 +1,9 @@
 # API Gateway REST privado, con recursos nativos de Terraform.
 #   API Int -> RecLineaCloud      GET  /v1/sujetos/{tipo}/{numero}/reporte/{perfil}
+#              Consumidor: Portal Reconocer. Sin authorizer: lo protege el API
+#              PRIVATE y la resource policy (solo entra por el VPC endpoint).
 #   API Ext -> RecMicroservicios  POST /v1/microservicios/{operacion}
+#              Consumidor: Apigee. Con Lambda Authorizer (JWT Okta).
 #              (Lambda EXISTENTE, no se despliega aqui; ruta solo si se da su nombre)
 # Rutas tomadas del HLD.
 #
@@ -105,9 +108,9 @@ resource "aws_api_gateway_client_certificate" "this" {
   tags        = local.default_tags
 }
 
-# --- Authorizer (Okta JWT) ---
+# --- Authorizer (Okta JWT): solo para los accesos desde Apigee (API Ext) ---
 resource "aws_api_gateway_authorizer" "okta" {
-  count = local.api_enabled ? 1 : 0
+  count = local.apigw_ext_enabled ? 1 : 0
 
   name                             = "${local.names.api}-authorizer"
   rest_api_id                      = aws_api_gateway_rest_api.this[0].id
@@ -172,8 +175,7 @@ resource "aws_api_gateway_method" "reclinea" {
   rest_api_id   = aws_api_gateway_rest_api.this[0].id
   resource_id   = aws_api_gateway_resource.perfil[0].id
   http_method   = "GET"
-  authorization = "CUSTOM"
-  authorizer_id = aws_api_gateway_authorizer.okta[0].id
+  authorization = "NONE" # Portal Reconocer: acceso por VPC endpoint, sin authorizer
 
   request_parameters = {
     "method.request.path.tipo"   = true
@@ -322,7 +324,7 @@ resource "aws_api_gateway_method_settings" "all" {
 
 # --- Permisos para que API Gateway invoque las Lambdas ---
 resource "aws_lambda_permission" "apigw_authorizer" {
-  count = local.api_enabled ? 1 : 0
+  count = local.apigw_ext_enabled ? 1 : 0
 
   statement_id  = "AllowApiGatewayAuthorizer"
   action        = "lambda:InvokeFunction"
