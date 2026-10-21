@@ -334,17 +334,33 @@ Gracias
 - **Archivo de control:** que el UNLOAD escriba un archivo de control al final de
   cada flujo, y que cada EventBridge se dispare solo con el suyo (por nombre y
   carpeta), para que un flujo no dispare al otro.
+- **CTL por tabla + CTL final (propuesta 2026-10-21, 7 tablas):**
+  - **CTL por tabla:** el `UNLOAD ... MANIFEST VERBOSE` de Redshift ya escribe,
+    por cada tabla, un archivo con la lista de archivos y el numero de registros.
+    No hay que programarlo. **No dispara nada**: solo sirve para saber que esa
+    tabla termino y cuantos registros tiene.
+  - **CTL final:** cuando terminan las 7 tablas, el proceso que corre los UNLOAD
+    escribe un ultimo archivo (por ejemplo `<run_id>/_CTL_FIN.json`) con las 7
+    tablas, su carpeta y su conteo. **Es el unico que dispara** los EventBridge.
+    Redshift puede escribirlo con un UNLOAD de una consulta pequeña
+    (`PARALLEL OFF`).
+  - Encaja con la Step Function Update RecMaster: el Map recorre las 7 tablas
+    (concurrencia maxima ya configurada en 7), el Glue procesa cada una y la
+    Validation compara contra el conteo del CTL.
 
 ### 7.5 Preguntas abiertas
 
 1. Carpetas (prefijos) exactas donde escribe el UNLOAD: novedades (`nov/`?) y
    update online. ¿Los dos flujos usan los mismos archivos o carpetas distintas?
-2. ¿El UNLOAD puede escribir un archivo de control al final? ¿Con que nombre?
+2. ¿Se aprueba el esquema CTL por tabla + CTL final (7.4)? ¿Que nombre lleva el
+   CTL final?
 3. ¿Que proceso lanza hoy el calculo Reconocer? (define quien enciende y apaga
    el cluster).
 4. ARN del rol IAM del Redshift Bureau (para el COPY).
 5. ¿El Data Sharing Bureau → Reconocer ya existe o es parte de este trabajo?
 6. Ambientes: ¿por ahora solo develop? ¿Que cuentas se usan en qa y produccion?
+7. ¿Las novedades (cuenta Batch) son las mismas 7 tablas o otras? Define si un
+   solo CTL final dispara los dos flujos o si cada flujo tiene el suyo.
 
 ---
 
@@ -356,3 +372,4 @@ Gracias
 | 2026-10-21 | Tickets RITM5307356, RITM5307364, RITM5307368 y RITM5307372 atendidos: 4 repos creados. |
 | 2026-10-21 | Authorizer solo para Apigee (API Ext): cambio en la rama, **pendiente de decidir y desplegar**. |
 | 2026-10-21 | Analisis del flujo de novedades hacia la cuenta Batch: respuestas registradas en 7.2, preguntas abiertas en 7.5. |
+| 2026-10-21 | Se copian 7 tablas. Propuesta: CTL por tabla (manifest nativo del UNLOAD) + CTL final que dispara los flujos (7.4). |
