@@ -318,7 +318,14 @@ Ejemplo: `20261021T053000Z_FULL`.
 **Tipo de carga** (2026-10-21)
 - **FULL:** el insert a DynamoDB del en linea se hace con **DynamoDB Import from
   S3**, leyendo el mismo bucket Triggers_reconocer.
-- **DELTA:** se sigue usando el Glue RecMas_Transform_and_Upload.
+- **DELTA:** se sigue usando el Glue RecMas_Transform_and_Upload. Solo trae
+  registros **nuevos y modificados** (no borrados): el Glue escribe encima
+  (upsert) en la tabla vigente.
+- **Tabla vigente (puntero):** lo guarda la tabla DynamoDB **Metadata & Control**
+  (ya prevista en la arquitectura). RecLineaCloud recibe el puntero por parametro
+  o consulta esa tabla. La Validation actualiza el puntero cuando el FULL queda
+  validado.
+- **Despues de un FULL, la tabla anterior se borra.**
 
 **Carpetas** (aprobado). Una carpeta por ejecucion y, dentro, una por tabla. En
 S3 las carpetas se crean solas cuando el UNLOAD escribe; no van en la IaC.
@@ -387,10 +394,12 @@ Step Function Update RecMaster; la Step Function Upload usa la misma lista.
   (Reemplaza la propuesta anterior de usar `MANIFEST VERBOSE` por tabla.)
 - **Formato del UNLOAD: CSV con encabezado, comprimido (GZIP).** Sirve para los
   tres consumidores: Import (FULL), Glue (DELTA) y COPY de Bureau.
-- **Tabla vigente (FULL):** como cada FULL crea tablas nuevas, el API debe saber
-  cual usar. Recomendado: un "puntero" con el nombre de la tabla vigente
-  (en la tabla Metadata & Control o en un parametro SSM), que se cambia solo
-  cuando la carga FULL termina y se valida.
+- **Borrado de la tabla anterior (FULL):** borrarla unos minutos despues de
+  cambiar el puntero, no en el mismo instante, para no cortar consultas que aun
+  la esten leyendo.
+- **Etiquetas de las tablas creadas por el Import:** el Import no pone etiquetas
+  al crear la tabla; hay que agregarlas despues (AppID, CostString, etc.) para
+  cumplir las reglas de la cuenta.
 
 ### 7.5 Impacto de FULL / DELTA en el despliegue (cuenta 147)
 
@@ -398,17 +407,20 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
 
 1. **Step Function Update RecMaster:** agregar una decision por `tipo_carga`:
    - `DELTA` → camino actual (Glue + Validation).
-   - `FULL` → por cada tabla, Import from S3 + esperar a que termine + Validation
-     (con el conteo del Import) + cambiar el puntero a la tabla nueva.
+   - `FULL` → Import from S3 + esperar a que termine + etiquetar la tabla +
+     Validation (con el conteo del Import) + cambiar el puntero en Metadata &
+     Control + borrar la tabla anterior.
 2. **Rol de la Step Function:** permisos para importar (`dynamodb:ImportTable`,
-   `dynamodb:DescribeImport`), leer el bucket Triggers y escribir los logs del
-   Import. Validar con CE que el permissions boundary lo permite, porque el
-   Import **crea tablas** en tiempo de ejecucion.
-3. **Nombres de tablas DynamoDB:** pasan de un nombre fijo a un patron (ej.
-   `<prefijo>-mat_info_basica-<run_id>`). Los roles de RecLineaCloud, Glue y
-   Validation se ajustan a ese patron.
-4. **RecLineaCloud:** lee el nombre de la tabla vigente desde el puntero, no
-   desde una variable fija.
+   `dynamodb:DescribeImport`), etiquetar y borrar tablas
+   (`dynamodb:TagResource`, `dynamodb:DeleteTable`), leer el bucket Triggers y
+   escribir los logs del Import. Validar con CE que el permissions boundary lo
+   permite, porque el flujo **crea y borra tablas** en tiempo de ejecucion.
+3. **Nombres de tablas DynamoDB:** la tabla de datos pasa de un nombre fijo a un
+   patron (ej. `reconocer_master_<run_id>`); Metadata & Control conserva nombre
+   fijo. Los roles de RecLineaCloud, RecMicroservicios, Glue y Validation se
+   ajustan a ese patron.
+4. **RecLineaCloud:** toma el nombre de la tabla vigente del puntero (parametro o
+   Metadata & Control), no de una variable fija. Validation escribe el puntero.
 5. **EventBridge:** sin cambio por FULL/DELTA (el mismo `7_tablas_finish.json`
    dispara los dos flujos).
 6. **Cuenta Batch:** decidir que hace el COPY en Bureau con FULL (¿borra y carga?)
@@ -416,19 +428,17 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
 
 ### 7.6 Preguntas abiertas
 
-1. ¿Cada una de las 7 tablas es una tabla DynamoDB distinta en el en linea, o van
-   todas a una sola tabla?
-2. ¿Quien lanza el Import from S3 en FULL: nuestra Step Function o el proceso
-   que maneja las tablas DynamoDB por fuera de la IaC?
-3. Despues de un FULL, ¿la tabla anterior se borra o se guarda un tiempo para
-   volver atras?
-4. ¿Apruebas CSV + GZIP como formato del UNLOAD?
-5. En DELTA, ¿llegan tambien registros borrados o solo nuevos y modificados?
-6. ¿Que proceso lanza hoy el calculo Reconocer? (define quien enciende y apaga
+1. El diagrama muestra **una sola** tabla `reconocer_master`. ¿Las 7 tablas van
+   todas a esa tabla? Si es asi, el Import lee una carpeta comun con las 7 y el
+   CTL final no puede quedar dentro de ella. Propuesta: datos en
+   `nov/<run_id>/data/<tabla>/` y CTL en `nov/<run_id>/7_tablas_finish.json`.
+2. ¿El Import from S3 lo lanza nuestra Step Function (como sugiere el diagrama)?
+3. ¿Apruebas CSV + GZIP como formato del UNLOAD?
+4. ¿Que proceso lanza hoy el calculo Reconocer? (define quien enciende y apaga
    el cluster).
-7. ARN del rol IAM del Redshift Bureau (para el COPY).
-8. ¿El Data Sharing Bureau → Reconocer ya existe o es parte de este trabajo?
-9. Ambientes: ¿por ahora solo develop? ¿Que cuentas se usan en qa y produccion?
+5. ARN del rol IAM del Redshift Bureau (para el COPY).
+6. ¿El Data Sharing Bureau → Reconocer ya existe o es parte de este trabajo?
+7. Ambientes: ¿por ahora solo develop? ¿Que cuentas se usan en qa y produccion?
 
 ---
 
@@ -444,3 +454,4 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
 | 2026-10-21 | Novedades = las mismas 7 tablas. Un solo CTL final, `7_tablas_finish`, dispara los dos flujos. Pendiente ajustar la IaC. |
 | 2026-10-21 | CTL final: `7_tablas_finish.json`. Propuesta de carpetas `nov/<run_id>/<tabla>/` y contenido del JSON (7.2). |
 | 2026-10-21 | Aprobadas carpetas y contenido del CTL. Nombres de las 7 tablas. `run_id` = timestamp + FULL/DELTA. FULL usa DynamoDB Import from S3, DELTA usa Glue: impacto en 7.5. |
+| 2026-10-21 | Puntero en Metadata & Control (lo escribe Validation). Tabla anterior se borra tras FULL. DELTA solo nuevos y modificados (upsert). |
