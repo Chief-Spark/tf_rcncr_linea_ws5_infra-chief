@@ -106,8 +106,8 @@ Build 74281 OK: todos los componentes creados. API `bg2kuoleug` (PRIVATE), stage
 Las Lambdas siguen con el placeholder, asi que toda llamada al API falla hasta
 publicar el codigo real. Historial de builds y lecciones:
 [docs/APRENDIZAJES-DESPLIEGUE-LINEA.md](docs/APRENDIZAJES-DESPLIEGUE-LINEA.md).
-Inventario de lo desplegado y repo de desarrollo de cada componente:
-[docs/INVENTARIO-IAC-Y-REPOS.md](docs/INVENTARIO-IAC-Y-REPOS.md).
+Inventario de lo desplegado, repos de desarrollo, tickets y analisis en curso:
+[docs/SOLICITUD-REPOS-DESARROLLO.md](docs/SOLICITUD-REPOS-DESARROLLO.md).
 
 ### Pendiente
 - Re-ejecutar el build y confirmar que el plan sale "No changes" (idempotencia).
