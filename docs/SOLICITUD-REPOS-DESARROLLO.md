@@ -122,10 +122,10 @@ Gracias
 
 | # | Repo | Combinacion | Ticket | Estado |
 |---|---|---|---|---|
-| 1 | `A_RCNCR_LN_RCLNCLD` | AWS – LAMBDA-JAVA | RITM5307356 | Radicado |
-| 2 | `A_RCNCR_LN_ATHRZR` | AWS – LAMBDA-ZIP | RITM5307364 | Radicado |
-| 3 | `A_RCNCR_LN_VLDTN` | AWS – LAMBDA-ZIP | RITM5307368 | Radicado |
-| 4 | `A_RCNCR_LN_RCMS_TRNSFRM` | AWS – GLUE-PYTHON | RITM5307372 | Radicado |
+| 1 | `A_RCNCR_LN_RCLNCLD` | AWS – LAMBDA-JAVA | RITM5307356 | Creado (2026-10-21) |
+| 2 | `A_RCNCR_LN_ATHRZR` | AWS – LAMBDA-ZIP | RITM5307364 | Creado (2026-10-21) |
+| 3 | `A_RCNCR_LN_VLDTN` | AWS – LAMBDA-ZIP | RITM5307368 | Creado (2026-10-21) |
+| 4 | `A_RCNCR_LN_RCMS_TRNSFRM` | AWS – GLUE-PYTHON | RITM5307372 | Creado (2026-10-21) |
 
-Cuando DevSecOps cree cada repo, cambiar el estado aqui y en la columna
-**Ticket** de `INVENTARIO-IAC-Y-REPOS.md` (seccion 1).
+Los 4 tickets fueron atendidos por DevSecOps y los repos estan creados en el
+proyecto `COAWSPPR` de Bitbucket.
