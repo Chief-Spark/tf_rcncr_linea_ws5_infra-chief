@@ -124,7 +124,7 @@ Terraform no fija `source_code_hash`.
 Hoy un objeto que termina en `manifest.json` en el bucket Triggers dispara
 EventBridge → Step Function. El nombre y el formato son **supuestos** de la IaC
 (borrador del HLD). **Acordado:** el disparador sera el CTL final
-`7_tablas_finish` (ver [7.2](#72-lo-que-ya-esta-definido)); la regla aun no se ha
+`7_tablas_finish.json` (ver [7.2](#72-lo-que-ya-esta-definido)); la regla aun no se ha
 cambiado. Formato supuesto:
 
 ```json
@@ -301,7 +301,45 @@ Gracias
 - Se copian **7 tablas**. Las novedades que van a la cuenta Batch son **las mismas
   7 tablas** que alimentan el update online.
 - **Un solo CTL final** dispara los dos flujos. Nombre acordado:
-  **`7_tablas_finish`** (2026-10-21).
+  **`7_tablas_finish.json`** (2026-10-21).
+- Todo se escribe en el bucket **Triggers_reconocer** (147), ya desplegado.
+
+**Estructura de carpetas propuesta** (una carpeta por ejecucion y, dentro, una
+por tabla). En S3 las carpetas se crean solas cuando el UNLOAD escribe; no hay
+que crearlas en la IaC.
+
+```
+nov/<run_id>/<tabla_1>/            archivos del UNLOAD + manifest de la tabla
+nov/<run_id>/<tabla_2>/
+...
+nov/<run_id>/<tabla_7>/
+nov/<run_id>/7_tablas_finish.json  CTL final: el unico que dispara
+```
+
+- Por ejecucion: no se pisan datos entre corridas y se puede reprocesar o auditar.
+- Por tabla: el Glue (147) y el COPY de Bureau (Batch) leen una tabla por carpeta.
+  El COPY puede usar directamente el manifest de la tabla (`COPY ... MANIFEST`).
+- Regla de disparo (en las dos cuentas): carpeta `nov/` + archivo que termina en
+  `7_tablas_finish.json`.
+
+**Contenido propuesto de `7_tablas_finish.json`** (el formato que ya lee la Step
+Function Update RecMaster; la Step Function Upload puede usar la misma lista):
+
+```json
+{
+  "run_id": "20261021-001",
+  "tipo_carga": "NOVEDADES",
+  "fecha_fin": "2026-10-21T05:00:00Z",
+  "dominios": [
+    {
+      "nombre": "tabla_1",
+      "s3_path": "s3://<bucket-triggers>/nov/20261021-001/tabla_1/",
+      "registros_esperados": 125000
+    }
+  ]
+}
+```
+(una entrada por cada una de las 7 tablas)
 - Redshift Reconocer deberia apagarse al terminar su calculo y el UNLOAD, y
   encenderse antes del siguiente calculo, para ahorrar costos.
 
@@ -357,8 +395,8 @@ Gracias
 
 1. Carpetas (prefijos) exactas donde escribe el UNLOAD: novedades (`nov/`?) y
    update online. ¿Los dos flujos usan los mismos archivos o carpetas distintas?
-2. El CTL final `7_tablas_finish`: ¿lleva extension (por ejemplo `.json`) y en
-   que carpeta se escribe (¿`nov/`? ¿una carpeta por ejecucion?)
+2. Aprobar la estructura de carpetas y el contenido de `7_tablas_finish.json`
+   (7.2). Nombres reales de las 7 tablas y formato del `run_id`.
 3. ¿Que proceso lanza hoy el calculo Reconocer? (define quien enciende y apaga
    el cluster).
 4. ARN del rol IAM del Redshift Bureau (para el COPY).
@@ -377,3 +415,4 @@ Gracias
 | 2026-10-21 | Analisis del flujo de novedades hacia la cuenta Batch: respuestas registradas en 7.2, preguntas abiertas en 7.5. |
 | 2026-10-21 | Se copian 7 tablas. Propuesta: CTL por tabla (manifest nativo del UNLOAD) + CTL final que dispara los flujos (7.4). |
 | 2026-10-21 | Novedades = las mismas 7 tablas. Un solo CTL final, `7_tablas_finish`, dispara los dos flujos. Pendiente ajustar la IaC. |
+| 2026-10-21 | CTL final: `7_tablas_finish.json`. Propuesta de carpetas `nov/<run_id>/<tabla>/` y contenido del JSON (7.2). |
