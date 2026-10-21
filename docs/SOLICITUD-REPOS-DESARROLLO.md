@@ -25,7 +25,8 @@
    - [7.2 Lo que ya esta definido](#72-lo-que-ya-esta-definido)
    - [7.3 Conceptos](#73-conceptos)
    - [7.4 Recomendaciones](#74-recomendaciones)
-   - [7.5 Preguntas abiertas](#75-preguntas-abiertas)
+   - [7.5 Impacto de FULL / DELTA en el despliegue](#75-impacto-de-full--delta-en-el-despliegue-cuenta-147)
+   - [7.6 Preguntas abiertas](#76-preguntas-abiertas)
 8. [Bitacora](#8-bitacora)
 
 ---
@@ -291,117 +292,143 @@ Gracias
 
 ### 7.2 Lo que ya esta definido
 
-- El **UNLOAD de Redshift Reconocer** escribe los archivos en Triggers_reconocer.
-- Hay **dos flujos independientes** que arrancan al mismo tiempo desde ese bucket:
-  1. Update RecMaster (cuenta 147): carga Base_Online para la consulta en linea.
-  2. Novedades (cuenta Batch): carga las novedades en Redshift Bureau.
-- El mismo bucket avisa a **los dos EventBridge**: el de la 147 y el `default`
-  de la cuenta Batch.
-- Redshift Bureau nunca se pausa.
-- Se copian **7 tablas**. Las novedades que van a la cuenta Batch son **las mismas
-  7 tablas** que alimentan el update online.
-- **Un solo CTL final** dispara los dos flujos. Nombre acordado:
-  **`7_tablas_finish.json`** (2026-10-21).
-- Todo se escribe en el bucket **Triggers_reconocer** (147), ya desplegado.
+**Flujo**
+- El **UNLOAD de Redshift Reconocer** escribe los archivos en el bucket
+  **Triggers_reconocer** (147), ya desplegado.
+- Dos **flujos independientes** arrancan al mismo tiempo con el mismo archivo final:
+  1. Update RecMaster (cuenta 147): carga Base_Online (DynamoDB) para la consulta en linea.
+  2. Novedades (cuenta Batch): carga los mismos datos en Redshift Bureau.
+- El bucket avisa a **los dos EventBridge**: el de la 147 y el `default` de la
+  cuenta Batch (reenviado desde la 147).
+- Redshift Bureau nunca se pausa. Redshift Reconocer deberia apagarse al terminar
+  el calculo y el UNLOAD, y encenderse antes del siguiente calculo (costos).
 
-**Estructura de carpetas propuesta** (una carpeta por ejecucion y, dentro, una
-por tabla). En S3 las carpetas se crean solas cuando el UNLOAD escribe; no hay
-que crearlas en la IaC.
+**Las 7 tablas** (aprobado 2026-10-21)
+1. `mat_info_ubicacion`
+2. `mat_info_actividad_economica`
+3. `mat_ubicacion_agregada`
+4. `mat_info_basica`
+5. `mat_info_contactabilidad`
+6. `mat_info_punto_interes`
+7. `mat_info_movilidad`
+
+**`run_id`** (aprobado): fecha + hora (timestamp) + `FULL` o `DELTA`.
+Ejemplo: `20261021T053000Z_FULL`.
+
+**Tipo de carga** (2026-10-21)
+- **FULL:** el insert a DynamoDB del en linea se hace con **DynamoDB Import from
+  S3**, leyendo el mismo bucket Triggers_reconocer.
+- **DELTA:** se sigue usando el Glue RecMas_Transform_and_Upload.
+
+**Carpetas** (aprobado). Una carpeta por ejecucion y, dentro, una por tabla. En
+S3 las carpetas se crean solas cuando el UNLOAD escribe; no van en la IaC.
 
 ```
-nov/<run_id>/<tabla_1>/            archivos del UNLOAD + manifest de la tabla
-nov/<run_id>/<tabla_2>/
-...
-nov/<run_id>/<tabla_7>/
-nov/<run_id>/7_tablas_finish.json  CTL final: el unico que dispara
+nov/20261021T053000Z_FULL/mat_info_ubicacion/        solo archivos de datos
+nov/20261021T053000Z_FULL/mat_info_basica/
+...                                                  (las 7 tablas)
+nov/20261021T053000Z_FULL/7_tablas_finish.json       CTL final: el unico que dispara
 ```
 
-- Por ejecucion: no se pisan datos entre corridas y se puede reprocesar o auditar.
-- Por tabla: el Glue (147) y el COPY de Bureau (Batch) leen una tabla por carpeta.
-  El COPY puede usar directamente el manifest de la tabla (`COPY ... MANIFEST`).
-- Regla de disparo (en las dos cuentas): carpeta `nov/` + archivo que termina en
-  `7_tablas_finish.json`.
+Regla de disparo (las dos cuentas): carpeta `nov/` + archivo que termina en
+`7_tablas_finish.json`.
 
-**Contenido propuesto de `7_tablas_finish.json`** (el formato que ya lee la Step
-Function Update RecMaster; la Step Function Upload puede usar la misma lista):
+**Contenido de `7_tablas_finish.json`** (aprobado). Es el formato que ya lee la
+Step Function Update RecMaster; la Step Function Upload usa la misma lista.
 
 ```json
 {
-  "run_id": "20261021-001",
-  "tipo_carga": "NOVEDADES",
-  "fecha_fin": "2026-10-21T05:00:00Z",
+  "run_id": "20261021T053000Z_FULL",
+  "tipo_carga": "FULL",
+  "fecha_fin": "2026-10-21T05:30:00Z",
   "dominios": [
     {
-      "nombre": "tabla_1",
-      "s3_path": "s3://<bucket-triggers>/nov/20261021-001/tabla_1/",
+      "nombre": "mat_info_ubicacion",
+      "s3_path": "s3://<bucket-triggers>/nov/20261021T053000Z_FULL/mat_info_ubicacion/",
       "registros_esperados": 125000
     }
   ]
 }
 ```
-(una entrada por cada una de las 7 tablas)
-- Redshift Reconocer deberia apagarse al terminar su calculo y el UNLOAD, y
-  encenderse antes del siguiente calculo, para ahorrar costos.
+(una entrada por cada una de las 7 tablas; `tipo_carga` = `FULL` o `DELTA`)
 
 ### 7.3 Conceptos
 
-- **Archivo de control (CTL):** archivo pequeño que el UNLOAD escribe **al final**
-  para avisar "ya termine". Es el unico que dispara la Step Function. Sin el, se
-  lanzaria una ejecucion por cada archivo que escribe el UNLOAD (el UNLOAD parte
-  los datos en muchos archivos).
-- **`manifest.json`:** es el nombre que se **supuso** en la IaC para ese archivo
-  de control. Hoy la regla EventBridge Update se dispara con cualquier archivo
-  que termine en `manifest.json`. Se cambia por el nombre que se acuerde.
+- **Archivo de control (CTL):** archivo pequeño que se escribe **al final** para
+  avisar "ya termine". Es el unico que dispara los flujos. Sin el, se lanzaria
+  una ejecucion por cada archivo del UNLOAD (el UNLOAD parte los datos en muchos
+  archivos).
+- **`manifest.json`:** nombre que se **supuso** en la IaC para el CTL. Se
+  reemplaza por `7_tablas_finish.json`.
 - **Update online:** la carga que actualiza Base_Online (DynamoDB), que es lo que
-  consulta el API en linea. Es el flujo de la Step Function Update RecMaster.
+  consulta el API en linea.
 - **Reenvio de eventos entre cuentas:** S3 solo avisa al EventBridge de su propia
-  cuenta (147). Para que la cuenta Batch se entere, una regla en la 147 reenvia
-  el evento al bus `default` de la cuenta Batch.
+  cuenta (147). Una regla en la 147 reenvia el evento al bus `default` de la
+  cuenta Batch.
+- **DynamoDB Import from S3:** carga masiva de archivos de S3 a DynamoDB, sin
+  Glue. Dos limites importantes:
+  - **Siempre crea una tabla nueva.** No puede cargar sobre una tabla existente.
+  - Lee **CSV, DynamoDB JSON o Amazon Ion**. No lee Parquet.
 
 ### 7.4 Recomendaciones
 
-- **Pausa / Resume de Redshift Reconocer: tiene sentido** por costos (pausado no
-  se cobra computo, solo almacenamiento).
-  - Pausarlo apenas termine el UNLOAD: el Glue y el COPY de Bureau leen de S3,
-    no de Reconocer, asi que no hay que esperarlos.
-  - Encenderlo antes del siguiente calculo.
-  - Debe controlarlo el proceso que lanza el calculo Reconocer. Si es la Step
-    Function de la cuenta Batch, hace falta en la 147 un rol con
-    `redshift:PauseCluster`, `redshift:ResumeCluster` y `redshift:DescribeClusters`
-    sobre ese cluster, que pueda asumir el rol de esa Step Function.
-  - Validar antes que nadie mas use Reconocer en horarios en que estaria apagado.
-- **COPY en Redshift Bureau: role chaining** (lo que ya esta preparado en
-  `iam-redshift.tf`). El rol del Redshift Bureau asume el rol
-  `redshift-copy-xacct` de la 147, que solo puede leer el bucket Triggers. No hay
-  que tocar la policy del bucket. Falta el ARN del rol del Redshift Bureau.
-- **Archivo de control:** que el UNLOAD escriba un archivo de control al final de
-  cada flujo, y que cada EventBridge se dispare solo con el suyo (por nombre y
-  carpeta), para que un flujo no dispare al otro.
-- **CTL por tabla + CTL final (propuesta 2026-10-21, 7 tablas):**
-  - **CTL por tabla:** el `UNLOAD ... MANIFEST VERBOSE` de Redshift ya escribe,
-    por cada tabla, un archivo con la lista de archivos y el numero de registros.
-    No hay que programarlo. **No dispara nada**: solo sirve para saber que esa
-    tabla termino y cuantos registros tiene.
-  - **CTL final:** cuando terminan las 7 tablas, el proceso que corre los UNLOAD
-    escribe un ultimo archivo (por ejemplo `<run_id>/_CTL_FIN.json`) con las 7
-    tablas, su carpeta y su conteo. **Es el unico que dispara** los EventBridge.
-    Redshift puede escribirlo con un UNLOAD de una consulta pequeña
-    (`PARALLEL OFF`).
-  - Encaja con la Step Function Update RecMaster: el Map recorre las 7 tablas
-    (concurrencia maxima ya configurada en 7), el Glue procesa cada una y la
-    Validation compara contra el conteo del CTL.
+- **Pausa / Resume de Redshift Reconocer: tiene sentido** por costos.
+  - Pausarlo apenas termine el UNLOAD (el Glue, el Import y el COPY leen de S3,
+    no de Reconocer).
+  - Lo controla el proceso que lanza el calculo. Si es la Step Function de la
+    cuenta Batch, hace falta en la 147 un rol con `redshift:PauseCluster`,
+    `redshift:ResumeCluster` y `redshift:DescribeClusters`, que pueda asumir el
+    rol de esa Step Function.
+- **COPY en Redshift Bureau: role chaining** (ya preparado en `iam-redshift.tf`).
+  Falta el ARN del rol del Redshift Bureau.
+- **Sin control por tabla dentro de la carpeta de la tabla:** el Import de
+  DynamoDB carga **todo** lo que haya en la carpeta; un archivo de control ahi
+  se tomaria como datos. Los conteos por tabla van solo en `7_tablas_finish.json`.
+  (Reemplaza la propuesta anterior de usar `MANIFEST VERBOSE` por tabla.)
+- **Formato del UNLOAD: CSV con encabezado, comprimido (GZIP).** Sirve para los
+  tres consumidores: Import (FULL), Glue (DELTA) y COPY de Bureau.
+- **Tabla vigente (FULL):** como cada FULL crea tablas nuevas, el API debe saber
+  cual usar. Recomendado: un "puntero" con el nombre de la tabla vigente
+  (en la tabla Metadata & Control o en un parametro SSM), que se cambia solo
+  cuando la carga FULL termina y se valida.
 
-### 7.5 Preguntas abiertas
+### 7.5 Impacto de FULL / DELTA en el despliegue (cuenta 147)
 
-1. Carpetas (prefijos) exactas donde escribe el UNLOAD: novedades (`nov/`?) y
-   update online. ¿Los dos flujos usan los mismos archivos o carpetas distintas?
-2. Aprobar la estructura de carpetas y el contenido de `7_tablas_finish.json`
-   (7.2). Nombres reales de las 7 tablas y formato del `run_id`.
-3. ¿Que proceso lanza hoy el calculo Reconocer? (define quien enciende y apaga
+Pendiente de aprobar; **no se ha cambiado codigo**.
+
+1. **Step Function Update RecMaster:** agregar una decision por `tipo_carga`:
+   - `DELTA` → camino actual (Glue + Validation).
+   - `FULL` → por cada tabla, Import from S3 + esperar a que termine + Validation
+     (con el conteo del Import) + cambiar el puntero a la tabla nueva.
+2. **Rol de la Step Function:** permisos para importar (`dynamodb:ImportTable`,
+   `dynamodb:DescribeImport`), leer el bucket Triggers y escribir los logs del
+   Import. Validar con CE que el permissions boundary lo permite, porque el
+   Import **crea tablas** en tiempo de ejecucion.
+3. **Nombres de tablas DynamoDB:** pasan de un nombre fijo a un patron (ej.
+   `<prefijo>-mat_info_basica-<run_id>`). Los roles de RecLineaCloud, Glue y
+   Validation se ajustan a ese patron.
+4. **RecLineaCloud:** lee el nombre de la tabla vigente desde el puntero, no
+   desde una variable fija.
+5. **EventBridge:** sin cambio por FULL/DELTA (el mismo `7_tablas_finish.json`
+   dispara los dos flujos).
+6. **Cuenta Batch:** decidir que hace el COPY en Bureau con FULL (¿borra y carga?)
+   y con DELTA. Es del repo de la cuenta Batch.
+
+### 7.6 Preguntas abiertas
+
+1. ¿Cada una de las 7 tablas es una tabla DynamoDB distinta en el en linea, o van
+   todas a una sola tabla?
+2. ¿Quien lanza el Import from S3 en FULL: nuestra Step Function o el proceso
+   que maneja las tablas DynamoDB por fuera de la IaC?
+3. Despues de un FULL, ¿la tabla anterior se borra o se guarda un tiempo para
+   volver atras?
+4. ¿Apruebas CSV + GZIP como formato del UNLOAD?
+5. En DELTA, ¿llegan tambien registros borrados o solo nuevos y modificados?
+6. ¿Que proceso lanza hoy el calculo Reconocer? (define quien enciende y apaga
    el cluster).
-4. ARN del rol IAM del Redshift Bureau (para el COPY).
-5. ¿El Data Sharing Bureau → Reconocer ya existe o es parte de este trabajo?
-6. Ambientes: ¿por ahora solo develop? ¿Que cuentas se usan en qa y produccion?
+7. ARN del rol IAM del Redshift Bureau (para el COPY).
+8. ¿El Data Sharing Bureau → Reconocer ya existe o es parte de este trabajo?
+9. Ambientes: ¿por ahora solo develop? ¿Que cuentas se usan en qa y produccion?
 
 ---
 
@@ -416,3 +443,4 @@ Function Update RecMaster; la Step Function Upload puede usar la misma lista):
 | 2026-10-21 | Se copian 7 tablas. Propuesta: CTL por tabla (manifest nativo del UNLOAD) + CTL final que dispara los flujos (7.4). |
 | 2026-10-21 | Novedades = las mismas 7 tablas. Un solo CTL final, `7_tablas_finish`, dispara los dos flujos. Pendiente ajustar la IaC. |
 | 2026-10-21 | CTL final: `7_tablas_finish.json`. Propuesta de carpetas `nov/<run_id>/<tabla>/` y contenido del JSON (7.2). |
+| 2026-10-21 | Aprobadas carpetas y contenido del CTL. Nombres de las 7 tablas. `run_id` = timestamp + FULL/DELTA. FULL usa DynamoDB Import from S3, DELTA usa Glue: impacto en 7.5. |
