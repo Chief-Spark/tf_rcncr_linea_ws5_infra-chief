@@ -327,15 +327,21 @@ Ejemplo: `20261021T053000Z_FULL`.
   validado.
 - **Despues de un FULL, la tabla anterior se borra.**
 
-**Carpetas** (aprobado). Una carpeta por ejecucion y, dentro, una por tabla. En
-S3 las carpetas se crean solas cuando el UNLOAD escribe; no van en la IaC.
+**Carpetas** (aprobado 2026-10-21). `nov/` es una carpeta dentro del bucket
+Triggers_reconocer (ya desplegado), no un bucket aparte. Una carpeta por
+ejecucion; dentro, `data/` con una carpeta por tabla, y el CTL final fuera de
+`data/` (el Import lee todo `data/` y no debe ver el CTL). En S3 las carpetas se
+crean solas cuando el UNLOAD escribe; no van en la IaC.
 
 ```
-nov/20261021T053000Z_FULL/mat_info_ubicacion/        solo archivos de datos
-nov/20261021T053000Z_FULL/mat_info_basica/
+nov/20261021T053000Z_FULL/data/mat_info_ubicacion/   solo archivos de datos
+nov/20261021T053000Z_FULL/data/mat_info_basica/
 ...                                                  (las 7 tablas)
 nov/20261021T053000Z_FULL/7_tablas_finish.json       CTL final: el unico que dispara
 ```
+
+Las 7 tablas van a **una sola** tabla DynamoDB (`reconocer_master`). En FULL,
+**nuestra Step Function** lanza un Import sobre `nov/<run_id>/data/`.
 
 Regla de disparo (las dos cuentas): carpeta `nov/` + archivo que termina en
 `7_tablas_finish.json`.
@@ -351,7 +357,7 @@ Step Function Update RecMaster; la Step Function Upload usa la misma lista.
   "dominios": [
     {
       "nombre": "mat_info_ubicacion",
-      "s3_path": "s3://<bucket-triggers>/nov/20261021T053000Z_FULL/mat_info_ubicacion/",
+      "s3_path": "s3://<bucket-triggers>/nov/20261021T053000Z_FULL/data/mat_info_ubicacion/",
       "registros_esperados": 125000
     }
   ]
@@ -392,8 +398,16 @@ Step Function Update RecMaster; la Step Function Upload usa la misma lista.
   DynamoDB carga **todo** lo que haya en la carpeta; un archivo de control ahi
   se tomaria como datos. Los conteos por tabla van solo en `7_tablas_finish.json`.
   (Reemplaza la propuesta anterior de usar `MANIFEST VERBOSE` por tabla.)
-- **Formato del UNLOAD: CSV con encabezado, comprimido (GZIP).** Sirve para los
-  tres consumidores: Import (FULL), Glue (DELTA) y COPY de Bureau.
+- **Formato del UNLOAD: CSV con encabezado, comprimido (GZIP).** Es el unico
+  formato que el UNLOAD de Redshift produce y que el Import de DynamoDB lee; sirve
+  tambien para el Glue (DELTA) y el COPY de Bureau.
+  - Alternativa: CSV + ZSTD (archivos mas pequeños; confirmar que el Glue lo lee).
+  - Descartado Parquet: el Import no lo lee.
+  - Descartado JSON: el UNLOAD genera JSON normal, no el "DynamoDB JSON" que pide
+    el Import.
+  - **Ojo con los tipos:** con CSV, el Import guarda todo como texto (salvo las
+    llaves). El Glue (DELTA) debe escribir los mismos tipos que el FULL, para que
+    la tabla no mezcle numeros y textos.
 - **Borrado de la tabla anterior (FULL):** borrarla unos minutos despues de
   cambiar el puntero, no en el mismo instante, para no cortar consultas que aun
   la esten leyendo.
@@ -428,17 +442,14 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
 
 ### 7.6 Preguntas abiertas
 
-1. El diagrama muestra **una sola** tabla `reconocer_master`. ¿Las 7 tablas van
-   todas a esa tabla? Si es asi, el Import lee una carpeta comun con las 7 y el
-   CTL final no puede quedar dentro de ella. Propuesta: datos en
-   `nov/<run_id>/data/<tabla>/` y CTL en `nov/<run_id>/7_tablas_finish.json`.
-2. ¿El Import from S3 lo lanza nuestra Step Function (como sugiere el diagrama)?
-3. ¿Apruebas CSV + GZIP como formato del UNLOAD?
-4. ¿Que proceso lanza hoy el calculo Reconocer? (define quien enciende y apaga
+1. Formato del UNLOAD: ¿CSV + GZIP (recomendado) o CSV + ZSTD? (ver 7.4)
+2. Llave de `reconocer_master` (partition key / sort key) y si RecLineaCloud
+   necesita algun campo como numero (con CSV todo llega como texto).
+3. ¿Que proceso lanza hoy el calculo Reconocer? (define quien enciende y apaga
    el cluster).
-5. ARN del rol IAM del Redshift Bureau (para el COPY).
-6. ¿El Data Sharing Bureau → Reconocer ya existe o es parte de este trabajo?
-7. Ambientes: ¿por ahora solo develop? ¿Que cuentas se usan en qa y produccion?
+4. ARN del rol IAM del Redshift Bureau (para el COPY).
+5. ¿El Data Sharing Bureau → Reconocer ya existe o es parte de este trabajo?
+6. Ambientes: ¿por ahora solo develop? ¿Que cuentas se usan en qa y produccion?
 
 ---
 
@@ -455,3 +466,4 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
 | 2026-10-21 | CTL final: `7_tablas_finish.json`. Propuesta de carpetas `nov/<run_id>/<tabla>/` y contenido del JSON (7.2). |
 | 2026-10-21 | Aprobadas carpetas y contenido del CTL. Nombres de las 7 tablas. `run_id` = timestamp + FULL/DELTA. FULL usa DynamoDB Import from S3, DELTA usa Glue: impacto en 7.5. |
 | 2026-10-21 | Puntero en Metadata & Control (lo escribe Validation). Tabla anterior se borra tras FULL. DELTA solo nuevos y modificados (upsert). |
+| 2026-10-22 | Aprobado: 7 tablas a una sola `reconocer_master`, datos en `nov/<run_id>/data/<tabla>/`, CTL un nivel arriba. El Import lo lanza nuestra Step Function. Formato del UNLOAD en decision (7.4). |
