@@ -503,6 +503,16 @@ Reconocer). Hallazgos que afectan la carga:
   COPY debe cargar a tablas temporales (staging) que si las tengan, y de ahi
   pasar a las tablas finales.
 
+**Decisiones 2026-10-22**
+- d7: **se duplica por persona** (opcion A). RecLineaCloud trae todo con una sola
+  consulta por `pk`. En Bureau se quitan los duplicados en la tabla temporal.
+- El UNLOAD **incluye** las 3 columnas de trazabilidad (`lote`,
+  `fecha_actualizacion`, `usuario_bd`).
+- Las tablas de Bureau **se llaman igual y tienen las mismas columnas** que las 7
+  de Reconocer.
+- Pendiente: las columnas que hacen unica cada fila de d3 (su "llave" de 7
+  columnas). Se sacan del DDL de `strct` o del autor del diccionario.
+
 **Para el equipo de desarrollo** (se resuelven en sus HU; no bloquean la IaC)
 
 1. ~~¿Varios registros por persona?~~ Resuelto con el grano de cada tabla (7.2).
@@ -535,3 +545,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-22 | Recibido el grano de las 7 tablas. `sk` propuesto por tabla (7.2). Sin impacto en la IaC. |
 | 2026-10-22 | El `id` de las tablas es tipo + numero de identificacion. |
 | 2026-10-22 | Revisado el diccionario de datos de las 7 tablas: hallazgos en 7.6. Sin impacto en la IaC. |
+| 2026-10-22 | d7 duplicado por persona; UNLOAD con columnas de trazabilidad; tablas de Bureau iguales a las de Reconocer. Pendiente: llave de d3. |
