@@ -108,6 +108,8 @@ publicar el codigo real. Historial de builds y lecciones:
 [docs/APRENDIZAJES-DESPLIEGUE-LINEA.md](docs/APRENDIZAJES-DESPLIEGUE-LINEA.md).
 Inventario de lo desplegado, repos de desarrollo, tickets y analisis en curso:
 [docs/SOLICITUD-REPOS-DESARROLLO.md](docs/SOLICITUD-REPOS-DESARROLLO.md).
+Guia para desarrollo del UNLOAD y la carga en DynamoDB y Bureau:
+[docs/GUIA-UNLOAD-Y-CARGA.md](docs/GUIA-UNLOAD-Y-CARGA.md).
 
 ### Pendiente
 - Re-ejecutar el build y confirmar que el plan sale "No changes" (idempotencia).

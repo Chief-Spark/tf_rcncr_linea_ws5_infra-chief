@@ -360,7 +360,7 @@ propuesta para el equipo de desarrollo):
 | `mat_info_basica` | `id` (la persona) | 1 | `INFO_BASICA` |
 | `mat_info_ubicacion` | `id` = `cod_dw_persona_ubic` | N (una por ubicacion) | `UBICACION#<cod_dw_persona_ubic>` |
 | `mat_info_actividad_economica` | CIIU | N | `ACTIVIDAD#<ciiu>` |
-| `mat_ubicacion_agregada` | 7 columnas | N | `UBIC_AGREGADA#<7 columnas unidas con #>` |
+| `mat_ubicacion_agregada` | 7 columnas | N | `UBIC_AGREGADA#<codigodane>#<ciudad>#<departamento>#<dato>` |
 | `mat_info_contactabilidad` | `(id, sector, ubicacion_id)` | N | `CONTACTABILIDAD#<sector>#<ubicacion_id>` |
 | `mat_info_punto_interes` | `(id, ubicacion_id)` | N | `PUNTO_INTERES#<ubicacion_id>` |
 | `mat_info_movilidad` | por evento | 0..N | `MOVILIDAD#<id del evento>` |
@@ -510,8 +510,12 @@ Reconocer). Hallazgos que afectan la carga:
   `fecha_actualizacion`, `usuario_bd`).
 - Las tablas de Bureau **se llaman igual y tienen las mismas columnas** que las 7
   de Reconocer.
-- Pendiente: las columnas que hacen unica cada fila de d3 (su "llave" de 7
-  columnas). Se sacan del DDL de `strct` o del autor del diccionario.
+- Llave de d3 (2026-10-22): `info_basica`, `tipo_identificacion`,
+  `numero_identificacion`, `ubicacion_dato`, `ubicacion_codigodane`,
+  `ubicacion_ciudad`, `ubicacion_departamento`.
+
+**Guia para desarrollo (UNLOAD, archivo final, DynamoDB y COPY a Bureau):**
+[GUIA-UNLOAD-Y-CARGA.md](GUIA-UNLOAD-Y-CARGA.md).
 
 **Para el equipo de desarrollo** (se resuelven en sus HU; no bloquean la IaC)
 
@@ -546,3 +550,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-22 | El `id` de las tablas es tipo + numero de identificacion. |
 | 2026-10-22 | Revisado el diccionario de datos de las 7 tablas: hallazgos en 7.6. Sin impacto en la IaC. |
 | 2026-10-22 | d7 duplicado por persona; UNLOAD con columnas de trazabilidad; tablas de Bureau iguales a las de Reconocer. Pendiente: llave de d3. |
+| 2026-10-22 | Llave de d3 recibida. Creada la guia para desarrollo `docs/GUIA-UNLOAD-Y-CARGA.md`. |
