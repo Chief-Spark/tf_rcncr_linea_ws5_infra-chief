@@ -351,6 +351,27 @@ identificacion. Diseño **aprobado 2026-10-22**:
   Identifica a la persona.
 - `sk` (sort key, **texto**) = de que tabla viene el registro. Ej.: `INFO_BASICA`,
   `UBICACION`. La combinacion `pk` + `sk` no se repite.
+
+**Grano de cada tabla y `sk` propuesto** (grano recibido 2026-10-22; el `sk` es
+propuesta para el equipo de desarrollo):
+
+| Tabla | Llave de origen | Filas por persona | `sk` propuesto |
+|---|---|---|---|
+| `mat_info_basica` | `id` (la persona) | 1 | `INFO_BASICA` |
+| `mat_info_ubicacion` | `id` = `cod_dw_persona_ubic` | N (una por ubicacion) | `UBICACION#<cod_dw_persona_ubic>` |
+| `mat_info_actividad_economica` | CIIU | N | `ACTIVIDAD#<ciiu>` |
+| `mat_ubicacion_agregada` | 7 columnas | N | `UBIC_AGREGADA#<7 columnas unidas con #>` |
+| `mat_info_contactabilidad` | `(id, sector, ubicacion_id)` | N | `CONTACTABILIDAD#<sector>#<ubicacion_id>` |
+| `mat_info_punto_interes` | `(id, ubicacion_id)` | N | `PUNTO_INTERES#<ubicacion_id>` |
+| `mat_info_movilidad` | por evento | 0..N | `MOVILIDAD#<id del evento>` |
+
+Consecuencias para desarrollo:
+- Cada tabla debe traer (o unir en el `SELECT` del UNLOAD) el **tipo y numero de
+  identificacion** de la persona para armar el `pk`.
+- DELTA no borra: si una persona deja de tener una ubicacion, el registro viejo
+  queda hasta el siguiente FULL.
+- RecLineaCloud debe paginar la consulta por `pk` (DynamoDB devuelve maximo
+  1 MB por pagina), sobre todo por movilidad (0..N eventos).
 - Las columnas `pk` y `sk` las arma el `SELECT` del UNLOAD en las 7 tablas.
 - Asi RecLineaCloud trae todo de una persona con una sola consulta, y los
   registros de una tabla no pisan a los de otra.
@@ -464,12 +485,13 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
 
 **Para el equipo de desarrollo** (se resuelven en sus HU; no bloquean la IaC)
 
-1. UNLOAD / Glue: ¿alguna de las 7 tablas tiene **varios registros por persona**
-   (por ejemplo, varias ubicaciones)? Define como se arma el `sk`
-   (ej. `UBICACION#1`, `UBICACION#2`).
-2. `mat_ubicacion_agregada` y `mat_info_punto_interes`: ¿son por persona o por
-   zona? Si son por zona, no encajan en la llave tipo + numero.
-3. Glue / RecLineaCloud: ¿algun campo debe ser numero? Con CSV el Import guarda
+1. ~~¿Varios registros por persona?~~ Resuelto con el grano de cada tabla (7.2).
+   Validar el `sk` propuesto.
+2. El `id` de las tablas, ¿es el tipo + numero de identificacion o un codigo
+   interno? Si es interno, el UNLOAD debe unirlo con tipo y numero.
+3. `mat_ubicacion_agregada`: ¿cuales son sus 7 columnas de llave y alguna
+   identifica a la persona?
+4. Glue / RecLineaCloud: ¿algun campo debe ser numero? Con CSV el Import guarda
    todo como texto; el Glue (DELTA) debe escribir los mismos tipos que el FULL.
 
 ---
@@ -490,3 +512,4 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
 | 2026-10-22 | Aprobado: 7 tablas a una sola `reconocer_master`, datos en `nov/<run_id>/data/<tabla>/`, CTL un nivel arriba. El Import lo lanza nuestra Step Function. Formato del UNLOAD en decision (7.4). |
 | 2026-10-22 | Aprobado CSV + GZIP. Llave de `reconocer_master`: tipo + numero de identificacion; propuesta `pk`/`sk` en 7.2. |
 | 2026-10-22 | Aprobada la llave `pk` + `sk` (ambas texto). Preguntas de datos pasadas al equipo de desarrollo (7.6). |
+| 2026-10-22 | Recibido el grano de las 7 tablas. `sk` propuesto por tabla (7.2). Sin impacto en la IaC. |
