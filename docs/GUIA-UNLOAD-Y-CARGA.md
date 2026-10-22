@@ -318,6 +318,38 @@ Llave del `ON` por tabla:
 Si una validacion falla, no se cambia el puntero (DynamoDB) ni se hace el
 `COMMIT` (Bureau).
 
+### Reporte de la Validation (cuenta 147)
+
+La Lambda Validation deja el resultado en el bucket Upload_Staging:
+
+```
+s3://dev-647096294147-rcncr-ws5-upload-staging-s3/validacion/<run_id>/<tabla>.json
+s3://dev-647096294147-rcncr-ws5-upload-staging-s3/validacion/<run_id>/resumen.json
+```
+
+`<tabla>.json` (una por tabla):
+```json
+{
+  "run_id": "20261022T053000Z_DELTA",
+  "tipo_carga": "DELTA",
+  "tabla": "mat_info_basica",
+  "registros_esperados": 125000,
+  "registros_cargados": 125000,
+  "registros_rechazados": 0,
+  "estado": "OK",
+  "motivo": null,
+  "fecha_validacion": "2026-10-22T06:10:00Z"
+}
+```
+
+`resumen.json`: el `run_id`, el `tipo_carga`, la lista de las 7 tablas con su
+`estado`, el estado general (`OK` solo si las 7 estan OK) y, en FULL, el nombre
+de la tabla DynamoDB nueva y si se cambio el puntero.
+
+En **FULL** el S3 Import entrega un solo conteo para las 7 tablas juntas
+(`ImportedItemCount`); la validacion compara ese total contra la suma de
+`registros_esperados`. Contar por tabla exigiria leer toda la tabla nueva.
+
 ---
 
 ## 8. Pendientes antes de la primera corrida

@@ -110,6 +110,9 @@ Terraform no fija `source_code_hash`.
 - La invoca la Step Function despues de cada Glue; recibe el item del Map
   (`run_id`, `tipo_carga`, `dominio`) y su respuesta es la salida del item.
 - Variables de entorno: `BUCKET_STAGING`, `BUCKET_TRIGGERS` y tablas DynamoDB.
+- Escribe su reporte en `s3://<upload-staging>/validacion/<run_id>/` (formato en
+  la [guia, seccion 7](GUIA-UNLOAD-Y-CARGA.md#7-validaciones)). *Permiso en la
+  rama, pendiente de desplegar.*
 
 ### 3.4 `A_RCNCR_LN_RCMS_TRNSFRM` — Glue RecMas_Transform_and_Upload (Python)
 - Publica el script en:
@@ -468,9 +471,10 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
    ajustan a ese patron.
 4. **RecLineaCloud:** toma el nombre de la tabla vigente del puntero (parametro o
    Metadata & Control), no de una variable fija. Validation escribe el puntero.
-5. **Validation → Upload_Staging:** el diagrama muestra que Validation escribe en
-   Upload_Staging. Hoy su rol **solo puede leer** ese bucket: falta
-   `s3:PutObject` (pendiente definir que escribe y en que carpeta).
+5. **Validation → Upload_Staging:** escribe un reporte por tabla y un resumen en
+   `validacion/<run_id>/` (aprobado 2026-10-22). Permiso `s3:PutObject` solo
+   sobre `validacion/*` agregado en `iam-lambda-validation.tf`: **en la rama,
+   pendiente de desplegar**.
 6. **EventBridge:** sin cambio por FULL/DELTA (el mismo `7_tablas_finish.json`
    dispara los dos flujos).
 7. **Cuenta Batch:** decidir que hace el COPY en Bureau con FULL (¿borra y carga?)
@@ -560,3 +564,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-22 | Llave de d3 recibida. Creada la guia para desarrollo `docs/GUIA-UNLOAD-Y-CARGA.md`. |
 | 2026-10-22 | Diagrama draw.io de la arquitectura: `docs/arquitectura-reconocer-linea.drawio`. |
 | 2026-10-22 | Validation escribe en Upload_Staging segun el diagrama; hoy su rol solo lee ese bucket (7.5). |
+| 2026-10-22 | Reporte de Validation en `validacion/<run_id>/`: permiso `s3:PutObject` agregado en la rama (pendiente de desplegar). |

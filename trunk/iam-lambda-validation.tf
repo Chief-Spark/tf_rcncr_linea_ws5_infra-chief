@@ -12,6 +12,13 @@ data "aws_iam_policy_document" "lambda_validation" {
     resources = [local.arns.s3_staging, "${local.arns.s3_staging}/*", local.arns.s3_triggers, "${local.arns.s3_triggers}/*"]
   }
 
+  # Reporte de la validacion: validacion/<run_id>/<tabla>.json y resumen.json.
+  statement {
+    sid       = "WriteValidationReports"
+    actions   = ["s3:PutObject"]
+    resources = ["${local.arns.s3_staging}/validacion/*"]
+  }
+
   dynamic "statement" {
     for_each = local.has_master_table
     content {
