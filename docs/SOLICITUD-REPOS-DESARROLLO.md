@@ -468,9 +468,12 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
    ajustan a ese patron.
 4. **RecLineaCloud:** toma el nombre de la tabla vigente del puntero (parametro o
    Metadata & Control), no de una variable fija. Validation escribe el puntero.
-5. **EventBridge:** sin cambio por FULL/DELTA (el mismo `7_tablas_finish.json`
+5. **Validation → Upload_Staging:** el diagrama muestra que Validation escribe en
+   Upload_Staging. Hoy su rol **solo puede leer** ese bucket: falta
+   `s3:PutObject` (pendiente definir que escribe y en que carpeta).
+6. **EventBridge:** sin cambio por FULL/DELTA (el mismo `7_tablas_finish.json`
    dispara los dos flujos).
-6. **Cuenta Batch:** decidir que hace el COPY en Bureau con FULL (¿borra y carga?)
+7. **Cuenta Batch:** decidir que hace el COPY en Bureau con FULL (¿borra y carga?)
    y con DELTA. Es del repo de la cuenta Batch.
 
 ### 7.6 Preguntas abiertas
@@ -556,3 +559,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-22 | d7 duplicado por persona; UNLOAD con columnas de trazabilidad; tablas de Bureau iguales a las de Reconocer. Pendiente: llave de d3. |
 | 2026-10-22 | Llave de d3 recibida. Creada la guia para desarrollo `docs/GUIA-UNLOAD-Y-CARGA.md`. |
 | 2026-10-22 | Diagrama draw.io de la arquitectura: `docs/arquitectura-reconocer-linea.drawio`. |
+| 2026-10-22 | Validation escribe en Upload_Staging segun el diagrama; hoy su rol solo lee ese bucket (7.5). |
