@@ -483,6 +483,26 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
 3. ¿El Data Sharing Bureau → Reconocer ya existe o es parte de este trabajo?
 4. Ambientes: ¿por ahora solo develop? ¿Que cuentas se usan en qa y produccion?
 
+**Del diccionario de datos de las 7 tablas** (recibido 2026-10-22,
+`DICCIONARIO_DATOS_7_TABLAS_DOMINIO.md`; tablas en `bdm_datos` de Redshift
+Reconocer). Hallazgos que afectan la carga:
+
+- Las 7 tablas son **foto completa** de cada corrida (`TRUNCATE` + `INSERT`).
+- **d5 y d7 no traen tipo ni numero de identificacion**: el UNLOAD debe unirlas
+  con d1. d5 se une por `ubicacion_id = d1.id` (1 persona). d7 se une por
+  `ubicacion_id = d1.cod_dw_ubic`, que **puede ser de varias personas**: el join
+  multiplica filas.
+- La llave de d5 `(id, sector, ubicacion_id)` tiene `id` y `sector` siempre NULL:
+  el `sk` solo puede usar `ubicacion_id`.
+- d3: la ficha no dice cuales son sus 7 columnas de llave. Sus campos `id`,
+  `tipo` y `fuente` son listas con comas (el CSV debe ir entre comillas).
+- **NULL vs vacio importa** (d5: NULL = "no se sabe"; d4 `genero`: vacio, no
+  NULL). El CSV no los distingue solo: hay que definir como se escribe el NULL
+  en el UNLOAD y probarlo con el S3 Import.
+- Las columnas `pk`/`sk` y las de join no existen en las tablas de Bureau: el
+  COPY debe cargar a tablas temporales (staging) que si las tengan, y de ahi
+  pasar a las tablas finales.
+
 **Para el equipo de desarrollo** (se resuelven en sus HU; no bloquean la IaC)
 
 1. ~~¿Varios registros por persona?~~ Resuelto con el grano de cada tabla (7.2).
@@ -514,3 +534,4 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
 | 2026-10-22 | Aprobada la llave `pk` + `sk` (ambas texto). Preguntas de datos pasadas al equipo de desarrollo (7.6). |
 | 2026-10-22 | Recibido el grano de las 7 tablas. `sk` propuesto por tabla (7.2). Sin impacto en la IaC. |
 | 2026-10-22 | El `id` de las tablas es tipo + numero de identificacion. |
+| 2026-10-22 | Revisado el diccionario de datos de las 7 tablas: hallazgos en 7.6. Sin impacto en la IaC. |
