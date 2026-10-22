@@ -343,6 +343,16 @@ nov/20261021T053000Z_FULL/7_tablas_finish.json       CTL final: el unico que dis
 Las 7 tablas van a **una sola** tabla DynamoDB (`reconocer_master`). En FULL,
 **nuestra Step Function** lanza un Import sobre `nov/<run_id>/data/`.
 
+**Formato del UNLOAD** (aprobado 2026-10-22): **CSV con encabezado + GZIP.**
+
+**Llave de `reconocer_master`** (2026-10-22): tipo de identificacion + numero de
+identificacion. Propuesta de diseño (pendiente de confirmar, ver 7.6):
+- `pk` = `<tipo_id>#<numero_id>` (texto). Ej.: `CC#1020304050`.
+- `sk` = de que tabla viene el registro. Ej.: `INFO_BASICA`, `UBICACION#<n>`.
+- Las columnas `pk` y `sk` las arma el `SELECT` del UNLOAD en las 7 tablas.
+- Asi RecLineaCloud trae todo de una persona con una sola consulta, y los
+  registros de una tabla no pisan a los de otra.
+
 Regla de disparo (las dos cuentas): carpeta `nov/` + archivo que termina en
 `7_tablas_finish.json`.
 
@@ -442,14 +452,18 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
 
 ### 7.6 Preguntas abiertas
 
-1. Formato del UNLOAD: ¿CSV + GZIP (recomendado) o CSV + ZSTD? (ver 7.4)
-2. Llave de `reconocer_master` (partition key / sort key) y si RecLineaCloud
-   necesita algun campo como numero (con CSV todo llega como texto).
-3. ¿Que proceso lanza hoy el calculo Reconocer? (define quien enciende y apaga
+1. ¿Se aprueba la llave `pk` + `sk` propuesta en 7.2?
+2. ¿Alguna de las 7 tablas tiene **varios registros por persona** (por ejemplo,
+   varias ubicaciones)?
+3. `mat_ubicacion_agregada` y `mat_info_punto_interes`: ¿son por persona, o por
+   ubicacion / zona? (si no son por persona, no encajan en la llave tipo + numero)
+4. ¿RecLineaCloud necesita algun campo como numero? (con CSV todo llega como
+   texto; si no, todo queda como texto)
+5. ¿Que proceso lanza hoy el calculo Reconocer? (define quien enciende y apaga
    el cluster).
-4. ARN del rol IAM del Redshift Bureau (para el COPY).
-5. ¿El Data Sharing Bureau → Reconocer ya existe o es parte de este trabajo?
-6. Ambientes: ¿por ahora solo develop? ¿Que cuentas se usan en qa y produccion?
+6. ARN del rol IAM del Redshift Bureau (para el COPY).
+7. ¿El Data Sharing Bureau → Reconocer ya existe o es parte de este trabajo?
+8. Ambientes: ¿por ahora solo develop? ¿Que cuentas se usan en qa y produccion?
 
 ---
 
@@ -467,3 +481,4 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
 | 2026-10-21 | Aprobadas carpetas y contenido del CTL. Nombres de las 7 tablas. `run_id` = timestamp + FULL/DELTA. FULL usa DynamoDB Import from S3, DELTA usa Glue: impacto en 7.5. |
 | 2026-10-21 | Puntero en Metadata & Control (lo escribe Validation). Tabla anterior se borra tras FULL. DELTA solo nuevos y modificados (upsert). |
 | 2026-10-22 | Aprobado: 7 tablas a una sola `reconocer_master`, datos en `nov/<run_id>/data/<tabla>/`, CTL un nivel arriba. El Import lo lanza nuestra Step Function. Formato del UNLOAD en decision (7.4). |
+| 2026-10-22 | Aprobado CSV + GZIP. Llave de `reconocer_master`: tipo + numero de identificacion; propuesta `pk`/`sk` en 7.2. |
