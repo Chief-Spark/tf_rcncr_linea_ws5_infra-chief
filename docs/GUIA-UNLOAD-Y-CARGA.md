@@ -22,6 +22,9 @@
 
 ## 1. El flujo en una mirada
 
+Diagrama editable (draw.io): [arquitectura-reconocer-linea.drawio](arquitectura-reconocer-linea.drawio),
+pagina "1. Carga de datos (novedades)".
+
 ```
 Redshift Reconocer (147)
   1. UNLOAD de las 7 tablas  ─►  s3://<triggers>/nov/<run_id>/data/<tabla>/

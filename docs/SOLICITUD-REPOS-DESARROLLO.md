@@ -517,6 +517,10 @@ Reconocer). Hallazgos que afectan la carga:
 **Guia para desarrollo (UNLOAD, archivo final, DynamoDB y COPY a Bureau):**
 [GUIA-UNLOAD-Y-CARGA.md](GUIA-UNLOAD-Y-CARGA.md).
 
+**Diagrama de arquitectura (draw.io):**
+[arquitectura-reconocer-linea.drawio](arquitectura-reconocer-linea.drawio)
+(pagina 1: carga de datos; pagina 2: consumo en linea).
+
 **Para el equipo de desarrollo** (se resuelven en sus HU; no bloquean la IaC)
 
 1. ~~¿Varios registros por persona?~~ Resuelto con el grano de cada tabla (7.2).
@@ -551,3 +555,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-22 | Revisado el diccionario de datos de las 7 tablas: hallazgos en 7.6. Sin impacto en la IaC. |
 | 2026-10-22 | d7 duplicado por persona; UNLOAD con columnas de trazabilidad; tablas de Bureau iguales a las de Reconocer. Pendiente: llave de d3. |
 | 2026-10-22 | Llave de d3 recibida. Creada la guia para desarrollo `docs/GUIA-UNLOAD-Y-CARGA.md`. |
+| 2026-10-22 | Diagrama draw.io de la arquitectura: `docs/arquitectura-reconocer-linea.drawio`. |
