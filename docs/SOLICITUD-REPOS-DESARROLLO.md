@@ -487,8 +487,8 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
 
 1. ~~¿Varios registros por persona?~~ Resuelto con el grano de cada tabla (7.2).
    Validar el `sk` propuesto.
-2. El `id` de las tablas, ¿es el tipo + numero de identificacion o un codigo
-   interno? Si es interno, el UNLOAD debe unirlo con tipo y numero.
+2. ~~¿El `id` es tipo + numero o un codigo interno?~~ Resuelto 2026-10-22: el
+   `id` es **tipo + numero de identificacion**; el `pk` sale directo de el.
 3. `mat_ubicacion_agregada`: ¿cuales son sus 7 columnas de llave y alguna
    identifica a la persona?
 4. Glue / RecLineaCloud: ¿algun campo debe ser numero? Con CSV el Import guarda
@@ -513,3 +513,4 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
 | 2026-10-22 | Aprobado CSV + GZIP. Llave de `reconocer_master`: tipo + numero de identificacion; propuesta `pk`/`sk` en 7.2. |
 | 2026-10-22 | Aprobada la llave `pk` + `sk` (ambas texto). Preguntas de datos pasadas al equipo de desarrollo (7.6). |
 | 2026-10-22 | Recibido el grano de las 7 tablas. `sk` propuesto por tabla (7.2). Sin impacto en la IaC. |
+| 2026-10-22 | El `id` de las tablas es tipo + numero de identificacion. |
