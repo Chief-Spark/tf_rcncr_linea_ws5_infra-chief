@@ -116,7 +116,7 @@ Guia para desarrollo del UNLOAD y la carga en DynamoDB y Bureau:
 - Confirmar el nombre de Metadata & Control (propuesto `reconocer_metadata_control` en `develop/terraform.tfvars`).
 - Confirmar con CE que el permissions boundary permite a la Step Function `dynamodb:ImportTable`, `TagResource` y `DeleteTable` sobre `reconocer_master_*` (si no, el FULL falla en ejecucion, no en el despliegue).
 - Asociar el rol `redshift-unload` al namespace del Redshift Reconocer (lo hace quien administra el namespace).
-- Repo de IaC de la cuenta Batch (Ticket 5 en [docs/SOLICITUD-REPOS-DESARROLLO.md](docs/SOLICITUD-REPOS-DESARROLLO.md)): rol `BURoleFor-dev-651706752126-rcncr-ws5-redshift-bureau-copy`, policy del bus `default` y Step Function Upload.
+- Repo de IaC de la cuenta Batch `TF_RCNCR_LINEA_WS5_BTCH_INFRA` (RITM5324186, radicado; Ticket 5 en [docs/SOLICITUD-REPOS-DESARROLLO.md](docs/SOLICITUD-REPOS-DESARROLLO.md)): rol `BURoleFor-dev-651706752126-rcncr-ws5-redshift-bureau-copy`, policy del bus `default` y Step Function Upload.
 - ARN del rol consumidor de facturacion (otra cuenta).
 - Handler real de RecLineaCloud (y runtime/handler de las Python si difieren del default).
 - Permiso de despliegue (`lambda:UpdateFunctionCode` / `s3:PutObject`) para el pipeline de los 4 repos de desarrollo, ya creados en `COAWSPPR` ([docs/SOLICITUD-REPOS-DESARROLLO.md](docs/SOLICITUD-REPOS-DESARROLLO.md)).

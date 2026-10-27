@@ -168,7 +168,7 @@ en [7.2](#72-lo-que-ya-esta-definido) y en la
 
 Los 4 repos estan creados en el proyecto `COAWSPPR` de Bitbucket.
 
-| 5 | `TF_RCNCR_LINEA_WS5_BTCH_INFRA` | IaC de la cuenta Batch (651706752126) | TERRAFORM – TERRAFORM | — | **Por radicar** (texto en [Ticket 5](#ticket-5--iac-cuenta-batch-por-radicar)) |
+| 5 | `TF_RCNCR_LINEA_WS5_BTCH_INFRA` | IaC de la cuenta Batch (651706752126) | TERRAFORM – TERRAFORM | RITM5324186 | Radicado (2026-10-27) ([Ticket 5](#ticket-5--iac-cuenta-batch-ritm5324186)) |
 
 ---
 
@@ -273,7 +273,7 @@ script en s3://dev-647096294147-rcncr-ws5-upload-staging-s3/glue-scripts/.
 Gracias
 ```
 
-### Ticket 5 — IaC cuenta Batch (por radicar)
+### Ticket 5 — IaC cuenta Batch (RITM5324186)
 
 ```
 Buenos dias, solicito la creacion del siguiente repositorio en Bitbucket:
@@ -525,7 +525,7 @@ traslado a Bitbucket con todos los ajustes).
    reenvia el mismo evento al bus `default` de la cuenta 651706752126.
 7. **Rol COPY de Bureau:** se crea `redshift-copy-xacct` confiando solo en
    `BURoleFor-dev-651706752126-rcncr-ws5-redshift-bureau-copy` (lo crea el repo de
-   la cuenta Batch, ver [Ticket 5](#ticket-5--iac-cuenta-batch-por-radicar)).
+   la cuenta Batch, ver [Ticket 5](#ticket-5--iac-cuenta-batch-ritm5324186)).
 8. **Borrado de la tabla anterior:** lo hace la Step Function (decision
    2026-10-27).
 9. **Cuenta Batch:** decidir que hace el COPY en Bureau con FULL (¿borra y carga?)
@@ -618,3 +618,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-22 | Reporte de Validation en `validacion/<run_id>/`: permiso `s3:PutObject` agregado en la rama (pendiente de desplegar). |
 | 2026-10-27 | Implementado en la rama: FULL con S3 Import, disparo con `7_tablas_finish.json`, reenvio a la cuenta Batch, tablas `reconocer_master_*` / `reconocer_metadata_control`, rol COPY para el rol de Bureau y borrado por la Step Function. Pendiente de desplegar. |
 | 2026-10-27 | Ticket 5 (repo IaC de la cuenta Batch) redactado, por radicar. |
+| 2026-10-27 | Radicado el repo de IaC de la cuenta Batch `TF_RCNCR_LINEA_WS5_BTCH_INFRA`: RITM5324186. |
