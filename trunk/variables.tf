@@ -54,16 +54,21 @@ variable "assume_role_external_id" {
 }
 
 # --- Recursos existentes (NO se despliegan en este repo) ---
-variable "dynamodb_reconocer_master_table" {
-  description = "Nombre de la tabla DynamoDB Base_Online (reconocer_master). Se crea por otro proceso; vacio = roles sin acceso a esta tabla."
+variable "dynamodb_reconocer_master_prefix" {
+  description = "Prefijo de las tablas reconocer_master. En FULL la Step Function las crea con el S3 Import como <prefijo><run_id>. Vacio = roles sin acceso a estas tablas."
   type        = string
-  default     = ""
+  default     = "reconocer_master_"
 }
 
 variable "dynamodb_metadata_control_table" {
-  description = "Nombre de la tabla DynamoDB de Metadata & Control (puntero de version activa). Se crea por otro proceso; vacio = roles sin acceso a esta tabla."
+  description = "Nombre de la tabla DynamoDB Metadata & Control (puntero a la tabla reconocer_master vigente). Se crea por otro proceso; vacio = roles sin acceso a esta tabla."
   type        = string
   default     = ""
+
+  validation {
+    condition     = var.dynamodb_metadata_control_table == "" || var.dynamodb_reconocer_master_prefix == "" || !startswith(var.dynamodb_metadata_control_table, var.dynamodb_reconocer_master_prefix)
+    error_message = "La tabla de control no puede empezar por el prefijo de reconocer_master: la Step Function puede borrar tablas con ese prefijo."
+  }
 }
 
 variable "recmicroservicios_function_name" {
@@ -177,12 +182,36 @@ variable "redshift_bureau_role_arn" {
   description = "ARN del rol IAM asociado al Redshift Bureau (cuenta Procesos Batch) que hace el COPY. Vacio = no se crea el rol redshift-copy-xacct."
   type        = string
   default     = ""
+
+  validation {
+    condition     = var.redshift_bureau_role_arn == "" || can(regex("^arn:aws:iam::[0-9]{12}:role/.+$", var.redshift_bureau_role_arn))
+    error_message = "redshift_bureau_role_arn debe ser el ARN de un rol IAM (arn:aws:iam::<cuenta>:role/<nombre>)."
+  }
 }
 
-variable "manifest_key_suffix" {
-  description = "Sufijo de la key del manifiesto que dispara la Step Function."
+variable "novedades_prefix" {
+  description = "Carpeta de Triggers_reconocer donde el UNLOAD escribe cada corrida: <prefijo><run_id>/data/<tabla>/."
   type        = string
-  default     = "manifest.json"
+  default     = "nov/"
+}
+
+variable "ctl_final_name" {
+  description = "Archivo de control que se escribe al terminar las 7 tablas (<prefijo><run_id>/<nombre>). Es el unico que dispara los flujos."
+  type        = string
+  default     = "7_tablas_finish.json"
+}
+
+# --- Cuenta Procesos Batch (novedades hacia Redshift Bureau) ---
+variable "batch_account_id" {
+  description = "Cuenta Procesos Batch que recibe el aviso del CTL final en su EventBridge. Vacio = no se crea la regla de reenvio."
+  type        = string
+  default     = ""
+}
+
+variable "batch_event_bus_name" {
+  description = "Event bus de la cuenta Batch que recibe el aviso."
+  type        = string
+  default     = "default"
 }
 
 # --- Glue ---
@@ -209,4 +238,16 @@ variable "sfn_max_concurrency" {
   description = "Ramas paralelas del Distributed Map (una por dominio; el HLD define 7)."
   type        = number
   default     = 7
+}
+
+variable "sfn_import_poll_seconds" {
+  description = "FULL: segundos entre cada revision del estado del S3 Import."
+  type        = number
+  default     = 60
+}
+
+variable "sfn_delete_wait_seconds" {
+  description = "FULL: segundos de espera entre el cambio de puntero y el borrado de la tabla anterior."
+  type        = number
+  default     = 300
 }

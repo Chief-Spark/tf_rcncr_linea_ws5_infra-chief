@@ -11,7 +11,7 @@ data "aws_iam_policy_document" "lambda_reclineacloud" {
     content {
       sid       = "ReadBaseOnline"
       actions   = ["dynamodb:GetItem", "dynamodb:BatchGetItem", "dynamodb:Query", "dynamodb:DescribeTable"]
-      resources = [local.dynamodb_reconocer_master_arn, "${local.dynamodb_reconocer_master_arn}/index/*"]
+      resources = [local.dynamodb_master_tables_arn, "${local.dynamodb_master_tables_arn}/index/*"]
     }
   }
 

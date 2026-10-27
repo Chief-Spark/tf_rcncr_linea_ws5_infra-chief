@@ -10,11 +10,13 @@ permissions_boundary = "BUPolicyForBoundaryDTO"
 project              = "rcncr-ws5"
 enable_create_role   = true
 
-# --- Recursos existentes (NO se despliegan aqui; solo se referencian) ---
-# Tablas DynamoDB: se crean por otro proceso. Vacio = roles sin acceso a la
-# tabla; poner el nombre cuando exista y redesplegar.
-dynamodb_reconocer_master_table = ""
-dynamodb_metadata_control_table = ""
+# --- Tablas DynamoDB (NO se crean con Terraform; solo se dan permisos) ---
+# reconocer_master: en FULL la Step Function la crea con el S3 Import, una por
+# corrida: <prefijo><run_id> (ej. reconocer_master_20261022T053000Z_FULL).
+dynamodb_reconocer_master_prefix = "reconocer_master_"
+# Metadata & Control (puntero a la tabla vigente): la crea otro proceso. No puede
+# empezar por el prefijo de arriba (la Step Function borra tablas con ese prefijo).
+dynamodb_metadata_control_table = "reconocer_metadata_control"
 
 # Lambda RecMicroservicios existente: conecta la ruta del API Ext y permite que
 # su rol publique en la cola de facturacion. Vacio = sin ruta Ext ni permiso.
@@ -56,6 +58,18 @@ facturacion_consumer_principal_arns = []
 # --- Triggers_reconocer ---
 # El rol redshift-unload se crea siempre; asociarlo al namespace del Redshift
 # Reconocer (8eac1c32-7d63-4570-9906-334aa9903dc5) fuera de este repo.
-# PENDIENTE: ARN del rol IAM del Redshift Bureau (cuenta Procesos Batch) que hace
-# el COPY. Vacio = no se crea el rol redshift-copy-xacct.
-redshift_bureau_role_arn = ""
+# Rol del Redshift Bureau (cuenta Procesos Batch 651706752126) que hace el COPY.
+# Lo crea el repo de infraestructura de la cuenta Batch CON ESTE NOMBRE y lo
+# asocia al cluster Bureau. Aqui se crea redshift-copy-xacct confiando solo en
+# ese rol (funciona aunque todavia no exista).
+redshift_bureau_role_arn = "arn:aws:iam::651706752126:role/BURoleFor-dev-651706752126-rcncr-ws5-redshift-bureau-copy"
+
+# --- Novedades (CTL final y reenvio a la cuenta Batch) ---
+# El UNLOAD escribe <novedades_prefix><run_id>/data/<tabla>/ y al final
+# <novedades_prefix><run_id>/<ctl_final_name>, que dispara los dos flujos.
+novedades_prefix = "nov/"
+ctl_final_name   = "7_tablas_finish.json"
+# Cuenta Batch: recibe el mismo aviso en su EventBridge. Su bus debe permitir
+# events:PutEvents desde esta cuenta (resource policy en la cuenta Batch).
+batch_account_id     = "651706752126"
+batch_event_bus_name = "default"

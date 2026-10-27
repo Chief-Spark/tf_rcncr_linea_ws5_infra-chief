@@ -59,9 +59,15 @@ module "redshift_unload_role" {
 
 # --- COPY: Redshift Bureau (cuenta Procesos Batch) lee Triggers_reconocer. ---
 # Role chaining: IAM_ROLE '<rol Bureau en su cuenta>,<este rol>'. El acceso al
-# bucket queda dentro de la 147. La otra punta (sts:AssumeRole sobre este rol en
-# la policy del rol del Bureau) se configura en la otra cuenta.
-# Se crea solo cuando se conoce el ARN del rol del Bureau.
+# bucket queda dentro de la 147. La otra punta (el rol del Bureau y su
+# sts:AssumeRole sobre este rol) se crea en la cuenta Batch.
+# La confianza va a la cuenta del Bureau con condicion sobre el ARN exacto de su
+# rol: equivale a confiar solo en ese rol y no falla si aun no existe (una trust
+# policy con el ARN del rol como principal exige que el rol ya exista).
+locals {
+  redshift_bureau_account_id = var.redshift_bureau_role_arn != "" ? split(":", var.redshift_bureau_role_arn)[4] : ""
+}
+
 data "aws_iam_policy_document" "redshift_copy_trust" {
   count = var.redshift_bureau_role_arn != "" ? 1 : 0
 
@@ -69,7 +75,12 @@ data "aws_iam_policy_document" "redshift_copy_trust" {
     actions = ["sts:AssumeRole"]
     principals {
       type        = "AWS"
-      identifiers = [var.redshift_bureau_role_arn]
+      identifiers = ["arn:aws:iam::${local.redshift_bureau_account_id}:root"]
+    }
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:PrincipalArn"
+      values   = [var.redshift_bureau_role_arn]
     }
   }
 }

@@ -86,7 +86,9 @@ Terraform no fija `source_code_hash`.
   desplegar: hoy en AWS esta ruta aun usa el authorizer.*
 - Variables de entorno que entrega la IaC:
   - `SQS_FACTURACION_URL`: cola FIFO de facturacion (envia `MessageGroupId`).
-  - Nombres de tablas DynamoDB (cuando se informen en `terraform.tfvars`).
+  - `TABLE_CONTROL` (Metadata & Control) y `TABLE_MASTER_PREFIX`
+    (`reconocer_master_`): la tabla vigente se lee del puntero en Metadata &
+    Control. *Pendiente de desplegar.*
   - `OUTPUT_BUCKET`: solo si se define `reclinea_output_bucket`.
 - Permisos: lectura DynamoDB (cuando haya tablas), `sqs:SendMessage` a la cola.
 
@@ -109,7 +111,17 @@ Terraform no fija `source_code_hash`.
   concurrencia 7 (igual a la concurrencia del Map).
 - La invoca la Step Function despues de cada Glue; recibe el item del Map
   (`run_id`, `tipo_carga`, `dominio`) y su respuesta es la salida del item.
-- Variables de entorno: `BUCKET_STAGING`, `BUCKET_TRIGGERS` y tablas DynamoDB.
+- Variables de entorno: `BUCKET_STAGING`, `BUCKET_TRIGGERS`, `TABLE_CONTROL` y
+  `TABLE_MASTER_PREFIX`.
+- **FULL** (*pendiente de desplegar*): la Step Function la invoca una vez, despues
+  del S3 Import, con `{run_id, tipo_carga, dominios, tabla_nueva, importacion}`
+  (`importacion` = descripcion del Import: `ImportedItemCount`, `ErrorCount`...).
+  Debe:
+  1. comparar `ImportedItemCount` con la suma de `registros_esperados`;
+  2. si esta bien, cambiar el puntero en Metadata & Control a `tabla_nueva`;
+  3. responder `{"estado": "OK"|"ERROR", "tabla_anterior": "<nombre>"|null}`.
+  Con `OK` y `tabla_anterior`, la Step Function espera 5 minutos y borra esa
+  tabla (solo si empieza por `reconocer_master_` y no es la nueva).
 - Escribe su reporte en `s3://<upload-staging>/validacion/<run_id>/` (formato en
   la [guia, seccion 7](GUIA-UNLOAD-Y-CARGA.md#7-validaciones)). *Permiso en la
   rama, pendiente de desplegar.*
@@ -120,26 +132,17 @@ Terraform no fija `source_code_hash`.
   (configurable con `glue_script_location`).
 - Glue 5.0, G.1X, 10 workers, timeout 480 min.
 - Argumentos fijos: `--TempDir`, `--BUCKET_TRIGGERS`, `--BUCKET_STAGING`,
-  `--TABLE_BASE_ONLINE` (cuando se informe la tabla).
+  `--TABLE_CONTROL` y `--TABLE_MASTER_PREFIX` (*pendiente de desplegar*). En DELTA
+  el Glue lee el puntero en Metadata & Control y escribe en la tabla vigente.
 - Argumentos por ejecucion (desde la Step Function): `--run_id`, `--tipo_carga`,
   `--dominio`, `--s3_path`, `--registros_esperados`.
 
 ### 3.5 Archivo que dispara la carga
-Hoy un objeto que termina en `manifest.json` en el bucket Triggers dispara
-EventBridge → Step Function. El nombre y el formato son **supuestos** de la IaC
-(borrador del HLD). **Acordado:** el disparador sera el CTL final
-`7_tablas_finish.json` (ver [7.2](#72-lo-que-ya-esta-definido)); la regla aun no se ha
-cambiado. Formato supuesto:
-
-```json
-{
-  "run_id": "20261020-001",
-  "tipo_carga": "FULL",
-  "dominios": [
-    { "nombre": "personas", "s3_path": "s3://.../personas/", "registros_esperados": 1000 }
-  ]
-}
-```
+El CTL final `nov/<run_id>/7_tablas_finish.json` dispara la Step Function y el
+reenvio a la cuenta Batch (regla `nov/*/7_tablas_finish.json`; *pendiente de
+desplegar*: hoy en AWS la regla aun espera `manifest.json`). Formato y contenido
+en [7.2](#72-lo-que-ya-esta-definido) y en la
+[guia, seccion 4](GUIA-UNLOAD-Y-CARGA.md#4-paso-2-archivo-final-7_tablas_finishjson).
 
 ---
 
@@ -165,8 +168,7 @@ cambiado. Formato supuesto:
 
 Los 4 repos estan creados en el proyecto `COAWSPPR` de Bitbucket.
 
-Pendiente: repo nuevo para la cuenta Batch (`651706752126`) con el EventBridge y
-la Step Function Upload (ver [seccion 7](#7-analisis-en-curso-novedades-hacia-la-cuenta-batch)).
+| 5 | `TF_RCNCR_LINEA_WS5_BTCH_INFRA` | IaC de la cuenta Batch (651706752126) | TERRAFORM – TERRAFORM | — | **Por radicar** (texto en [Ticket 5](#ticket-5--iac-cuenta-batch-por-radicar)) |
 
 ---
 
@@ -270,6 +272,46 @@ script en s3://dev-647096294147-rcncr-ws5-upload-staging-s3/glue-scripts/.
 
 Gracias
 ```
+
+### Ticket 5 — IaC cuenta Batch (por radicar)
+
+```
+Buenos dias, solicito la creacion del siguiente repositorio en Bitbucket:
+
+Country: Colombia
+ProjectKey: COAWSPPR
+Tecnologia: Terraform
+Lenguaje: Terraform
+Nombre Repositorio: TF_RCNCR_LINEA_WS5_BTCH_INFRA
+
+Adicional aplicaciones: Sonar y Checkmarx con AppID 29197.
+
+Contexto: infraestructura (Terraform) de Reconocer Master Linea (SLCOPRBA-1437)
+en la cuenta Procesos Batch 651706752126: EventBridge que recibe el aviso de
+novedades desde la cuenta 647096294147, Step Function Upload que hace el COPY
+a Redshift Bureau y sus roles IAM. Complementa a
+COAWSPPR/TF_RCNCR_LINEA_WS5_INFRA (cuenta 647096294147).
+
+Gracias
+```
+
+**Lo que debe crear ese repo (cuenta 651706752126)**
+1. Rol `BURoleFor-dev-651706752126-rcncr-ws5-redshift-bureau-copy`
+   (**exactamente este nombre**: la 147 ya confia en el):
+   - confianza: `redshift.amazonaws.com`;
+   - permiso: `sts:AssumeRole` sobre
+     `arn:aws:iam::647096294147:role/BURoleFor-dev-647096294147-rcncr-ws5-redshift-copy-xacct`;
+   - luego, el administrador del cluster lo asocia a Redshift Bureau.
+2. Resource policy del event bus `default`: permitir `events:PutEvents` desde
+   la cuenta `647096294147`.
+3. Regla EventBridge en el bus `default` (evento S3 "Object Created" con
+   `nov/*/7_tablas_finish.json`) → Step Function Upload.
+4. Step Function Upload y su rol: lee el CTL final, hace el COPY de las 7 tablas
+   a tablas temporales y luego FULL (`DELETE` + `INSERT`) o DELTA (`MERGE`).
+   Ver [guia, seccion 6](GUIA-UNLOAD-Y-CARGA.md#6-paso-4-copy-en-redshift-bureau-cuenta-batch).
+
+Alternativa sin ticket: el repo batch existente `TF_RCNCR_WS5_INFRA` ya despliega
+en la cuenta 651706752126 y podria alojar estas piezas.
 
 ---
 
@@ -453,7 +495,8 @@ Step Function Update RecMaster; la Step Function Upload usa la misma lista.
 
 ### 7.5 Impacto de FULL / DELTA en el despliegue (cuenta 147)
 
-Pendiente de aprobar; **no se ha cambiado codigo**.
+**Implementado en la rama el 2026-10-27, pendiente de desplegar** (un solo
+traslado a Bitbucket con todos los ajustes).
 
 1. **Step Function Update RecMaster:** agregar una decision por `tipo_carga`:
    - `DELTA` → camino actual (Glue + Validation).
@@ -465,19 +508,27 @@ Pendiente de aprobar; **no se ha cambiado codigo**.
    (`dynamodb:TagResource`, `dynamodb:DeleteTable`), leer el bucket Triggers y
    escribir los logs del Import. Validar con CE que el permissions boundary lo
    permite, porque el flujo **crea y borra tablas** en tiempo de ejecucion.
-3. **Nombres de tablas DynamoDB:** la tabla de datos pasa de un nombre fijo a un
-   patron (ej. `reconocer_master_<run_id>`); Metadata & Control conserva nombre
-   fijo. Los roles de RecLineaCloud, RecMicroservicios, Glue y Validation se
-   ajustan a ese patron.
+3. **Nombres de tablas DynamoDB:** `reconocer_master_<run_id>` (patron
+   `reconocer_master_*`) y Metadata & Control `reconocer_metadata_control`
+   (propuesta; se cambia en `develop/terraform.tfvars`). Los roles de
+   RecLineaCloud, Glue y Validation quedan sobre ese patron. El rol de
+   RecMicroservicios (existente) no es de este repo: su dueño debe darle lectura
+   sobre el mismo patron.
 4. **RecLineaCloud:** toma el nombre de la tabla vigente del puntero (parametro o
    Metadata & Control), no de una variable fija. Validation escribe el puntero.
 5. **Validation → Upload_Staging:** escribe un reporte por tabla y un resumen en
    `validacion/<run_id>/` (aprobado 2026-10-22). Permiso `s3:PutObject` solo
    sobre `validacion/*` agregado en `iam-lambda-validation.tf`: **en la rama,
    pendiente de desplegar**.
-6. **EventBridge:** sin cambio por FULL/DELTA (el mismo `7_tablas_finish.json`
-   dispara los dos flujos).
-7. **Cuenta Batch:** decidir que hace el COPY en Bureau con FULL (¿borra y carga?)
+6. **EventBridge:** la regla dispara con `nov/*/7_tablas_finish.json` y una regla
+   nueva (`dev-647096294147-rcncr-ws5-fwd-batch-event`, rol `evb-fwd-batch`)
+   reenvia el mismo evento al bus `default` de la cuenta 651706752126.
+7. **Rol COPY de Bureau:** se crea `redshift-copy-xacct` confiando solo en
+   `BURoleFor-dev-651706752126-rcncr-ws5-redshift-bureau-copy` (lo crea el repo de
+   la cuenta Batch, ver [Ticket 5](#ticket-5--iac-cuenta-batch-por-radicar)).
+8. **Borrado de la tabla anterior:** lo hace la Step Function (decision
+   2026-10-27).
+9. **Cuenta Batch:** decidir que hace el COPY en Bureau con FULL (¿borra y carga?)
    y con DELTA. Es del repo de la cuenta Batch.
 
 ### 7.6 Preguntas abiertas
@@ -565,3 +616,5 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-22 | Diagrama draw.io de la arquitectura: `docs/arquitectura-reconocer-linea.drawio`. |
 | 2026-10-22 | Validation escribe en Upload_Staging segun el diagrama; hoy su rol solo lee ese bucket (7.5). |
 | 2026-10-22 | Reporte de Validation en `validacion/<run_id>/`: permiso `s3:PutObject` agregado en la rama (pendiente de desplegar). |
+| 2026-10-27 | Implementado en la rama: FULL con S3 Import, disparo con `7_tablas_finish.json`, reenvio a la cuenta Batch, tablas `reconocer_master_*` / `reconocer_metadata_control`, rol COPY para el rol de Bureau y borrado por la Step Function. Pendiente de desplegar. |
+| 2026-10-27 | Ticket 5 (repo IaC de la cuenta Batch) redactado, por radicar. |

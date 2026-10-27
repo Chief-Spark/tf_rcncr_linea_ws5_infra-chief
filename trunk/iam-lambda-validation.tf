@@ -24,7 +24,7 @@ data "aws_iam_policy_document" "lambda_validation" {
     content {
       sid       = "ReadBaseOnline"
       actions   = ["dynamodb:GetItem", "dynamodb:Query", "dynamodb:DescribeTable"]
-      resources = [local.dynamodb_reconocer_master_arn]
+      resources = [local.dynamodb_master_tables_arn]
     }
   }
 

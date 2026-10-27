@@ -37,7 +37,17 @@ data "aws_iam_policy_document" "glue_transform" {
     content {
       sid       = "WriteBaseOnline"
       actions   = ["dynamodb:BatchWriteItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DescribeTable"]
-      resources = [local.dynamodb_reconocer_master_arn]
+      resources = [local.dynamodb_master_tables_arn]
+    }
+  }
+
+  # DELTA: el Glue lee el puntero para saber cual es la tabla vigente.
+  dynamic "statement" {
+    for_each = local.has_control_table
+    content {
+      sid       = "ReadControl"
+      actions   = ["dynamodb:GetItem", "dynamodb:Query"]
+      resources = [local.dynamodb_metadata_control_arn]
     }
   }
 

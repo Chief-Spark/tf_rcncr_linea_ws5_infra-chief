@@ -39,7 +39,7 @@ module "glue" {
           "--BUCKET_TRIGGERS" = local.names.s3_triggers
           "--BUCKET_STAGING"  = local.names.s3_staging
         },
-        var.dynamodb_reconocer_master_table != "" ? { "--TABLE_BASE_ONLINE" = var.dynamodb_reconocer_master_table } : {}
+        { for k, v in local.dynamodb_env : "--${k}" => v }
       )
     }
   }

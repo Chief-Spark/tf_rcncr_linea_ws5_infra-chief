@@ -1,6 +1,6 @@
-# Rol de la Step Function "Update RecMaster" (Distributed Map, una rama por
-# dominio). Lanza el Glue Job por rama, invoca la Lambda Validation y registra
-# el estado de la corrida en la tabla de Control.
+# Rol de la Step Function "Update RecMaster". DELTA: Distributed Map, Glue por
+# tabla y Lambda Validation. FULL: S3 Import a una tabla nueva, Validation y
+# borrado de la tabla anterior.
 data "aws_iam_policy_document" "sfn_assume_role" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -52,13 +52,43 @@ data "aws_iam_policy_document" "sfn_updrecmaster" {
     resources = [local.arns.s3_staging, "${local.arns.s3_staging}/*"]
   }
 
+  # FULL: el S3 Import crea la tabla <prefijo><run_id>; la Step Function la
+  # etiqueta y, validada la carga, borra la anterior. Solo tablas con el prefijo.
   dynamic "statement" {
-    for_each = local.has_control_table
+    for_each = local.has_master_table
     content {
-      sid       = "ControlTable"
-      actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem"]
-      resources = [local.dynamodb_metadata_control_arn]
+      sid = "ImportMasterTables"
+      actions = [
+        "dynamodb:ImportTable",
+        "dynamodb:CreateTable",
+        "dynamodb:DescribeTable",
+        "dynamodb:TagResource",
+        "dynamodb:DeleteTable"
+      ]
+      resources = [local.dynamodb_master_tables_arn]
     }
+  }
+
+  dynamic "statement" {
+    for_each = local.has_master_table
+    content {
+      sid       = "DescribeImports"
+      actions   = ["dynamodb:DescribeImport"]
+      resources = ["${local.dynamodb_master_tables_arn}/import/*"]
+    }
+  }
+
+  # Logs que escribe el S3 Import en CloudWatch.
+  statement {
+    sid = "ImportLogs"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:DescribeLogStreams",
+      "logs:PutLogEvents",
+      "logs:PutRetentionPolicy"
+    ]
+    resources = ["arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws-dynamodb/*"]
   }
 
   statement {
@@ -93,7 +123,7 @@ module "sfn_updrecmaster_role" {
   assume_role_policy   = data.aws_iam_policy_document.sfn_assume_role.json
 
   policy_name        = "-${local.name_prefix}-sfn-updrecmaster" # BUPolicyFor-dev-647096294147-rcncr-ws5-sfn-updrecmaster
-  policy_description = "Glue, Lambda, S3 and Control table access for the Update RecMaster Step Function"
+  policy_description = "Glue, Lambda, S3 and DynamoDB import access for the Update RecMaster Step Function"
   policy_documents   = [data.aws_iam_policy_document.sfn_updrecmaster.json]
 
   tags = merge(local.default_tags, local.s3_exception_tags)

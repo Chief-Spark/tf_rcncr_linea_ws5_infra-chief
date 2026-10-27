@@ -10,6 +10,7 @@ output "role_arns" {
     redshift_unload      = module.redshift_unload_role.role_arn
     redshift_copy_xacct  = try(module.redshift_copy_role[0].role_arn, null)
     apigw_cloudwatch     = module.apigw_cloudwatch_role.role_arn
+    evb_fwd_batch        = try(module.evb_fwd_batch_role[0].role_arn, null)
   }
 }
 
