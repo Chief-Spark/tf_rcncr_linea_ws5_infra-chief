@@ -619,3 +619,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-27 | Implementado en la rama: FULL con S3 Import, disparo con `7_tablas_finish.json`, reenvio a la cuenta Batch, tablas `reconocer_master_*` / `reconocer_metadata_control`, rol COPY para el rol de Bureau y borrado por la Step Function. Pendiente de desplegar. |
 | 2026-10-27 | Ticket 5 (repo IaC de la cuenta Batch) redactado, por radicar. |
 | 2026-10-27 | Radicado el repo de IaC de la cuenta Batch `TF_RCNCR_LINEA_WS5_BTCH_INFRA`: RITM5324186. |
+| 2026-10-27 | HU de despliegue en la 147: SLCOPRBA-1526, rama Bitbucket `feature/SLCOPRBA-1526-desplegar-la-iac-en-develop-cuenta-147`. |
