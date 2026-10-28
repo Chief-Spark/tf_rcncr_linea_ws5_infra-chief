@@ -1,6 +1,6 @@
 version: 1.0.1
 global:
-  application: 29197
+  application: reconocer-linea-ws5-infra
   tech: terraform
   language: terraform
   jdk: 8

@@ -165,7 +165,7 @@ La IaC crea las Lambdas con un placeholder. El codigo real lo publica cada repo.
 | 13 | CMK de KMS: ver fila 22 de la seccion 3 | IaC | ➖ | ➖ | ➖ | ➖ |
 | 14 | SnapStart para RecLineaCloud: no aplica, ya no es Java | IaC | ➖ | ➖ | ➖ | ➖ |
 | 15 | AppID: corregir Sonar y Checkmarx de los repos (tickets 1 a 5) de 29197 (Procesos Especiales Batch) a 8519 (Reconocer Linea) | DevSecOps | ⏳ | ⏳ | ⏳ | ⏳ |
-| 16 | AppID en `.jenkins.yml` de este repo: `application` y proyecto Sonar `29197_Procesos-Especiales-Batch-AWS` siguen en 29197. Se cambia cuando DevSecOps confirme el proyecto Sonar del 8519 | DevSecOps | ⏳ | ⏳ | ⏳ | ⏳ |
+| 16 | `.jenkins.yml` de este repo: `application` ya es `reconocer-linea-ws5-infra` (2026-10-28). Falta el proyecto Sonar: sigue en `29197_Procesos-Especiales-Batch-AWS` hasta que DevSecOps confirme el del 8519 | DevSecOps | ⏳ | ⏳ | ⏳ | ⏳ |
 
 ---
 
