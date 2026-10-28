@@ -79,7 +79,7 @@ Para actualizar despues de un build:
 | 19 | Lotes: Lambda Parseo archivos | | por definir | ⏳ (8) | ⏳ | ⏳ | ⏳ |
 | 20 | Lotes: Lambda Consolidar | | por definir | ⏳ (8) | ⏳ | ⏳ | ⏳ |
 | 21 | RecLineaCloud → Validacion de identidad Cloud (otra cuenta) | Permiso `sts:AssumeRole` al rol cross-account de esa cuenta | `iam-lambda-reclineacloud.tf` | ⏳ (9) | ⏳ | ⏳ | ⏳ |
-| 22 | Conexion al ESB (red Experian) | Lambda en VPC si el ESB es privado | `lambda.tf` | ⏳ (10) | ⏳ | ⏳ | ⏳ |
+| 22 | CMK de KMS propia (S3, SQS, logs, Lambdas, tablas del Import) | Llave con `eits-tf-aws-kms` + `kms_key_arn` | por definir | ⏳ (10) | ⏳ | ⏳ | ⏳ |
 
 Notas DEV:
 1. La cuenta Batch debe permitir en su bus `default` que la 147 le envie
@@ -96,11 +96,14 @@ Notas DEV:
 6. Falta asociar el rol al namespace del Redshift Reconocer.
 7. Falta crear el rol de Bureau en la cuenta Batch. Cuando exista, la confianza
    se cambia al ARN exacto del rol (se quita el aviso Wiz IAM-146).
-8. Flujo de Lotes (Cargue de archivos): dentro del alcance de la migracion
-   (2026-10-28). En diseno: faltan respuestas de desarrollo.
+8. Flujo de Lotes (Cargue de archivos): dentro del alcance (2026-10-28).
+   Decidido: EventBridge arranca SFN Lotes; Parseo y Consolidar en Python;
+   archivos borrados a los 30 dias (menos `plantillas/`); Map de 5 a la vez,
+   2 reintentos. Falta: cuenta y rol del Portal.
 9. Falta el ARN del rol cross-account de la cuenta de Validacion de identidad.
    Esa cuenta debe confiar en `BURoleFor-<prefijo>-lmbd-reclineacloud`.
-10. Por aclarar: que Lambda llama al ESB y si el ESB esta en red privada.
+10. Decidido 2026-10-28: la CMK se crea en esta IaC. Falta la version de
+    `eits-tf-aws-kms`.
 
 ---
 
@@ -152,7 +155,7 @@ La IaC crea las Lambdas con un placeholder. El codigo real lo publica cada repo.
 | 10 | Permiso de los pipelines de los 4 repos para publicar codigo (`lambda:UpdateFunctionCode`, `s3:PutObject` en `glue-scripts/`) | DevSecOps | ⏳ | ⏳ | ⏳ | ⏳ |
 | 11 | Validar con desarrollo el contrato de la Validation ([seccion 3.3](SOLICITUD-REPOS-DESARROLLO.md#33-a_rcncr_ln_vldtn--validation-python)) | Desarrollo | ⏳ | ⏳ | ⏳ | ⏳ |
 | 12 | Re-ejecutar el build y ver "No changes" (confirma que la IaC quedo estable) | IaC | ⏳ | ⏳ | ⏳ | ⏳ |
-| 13 | Opcional: CMK de KMS (`kms_key_arn`), quita el aviso Wiz Serverless-010 | IaC + CE | ⏳ | ⏳ | ⏳ | ⏳ |
+| 13 | CMK de KMS: ver fila 22 de la seccion 3 | IaC | ➖ | ➖ | ➖ | ➖ |
 | 14 | Opcional: SnapStart para RecLineaCloud (la libreria aun no lo soporta) | IaC | ⏳ | ⏳ | ⏳ | ⏳ |
 
 ---
@@ -168,6 +171,9 @@ Solo se referencian. No llevan marca por ambiente.
 - Tablas DynamoDB `reconocer_master_*`: las crea la Step Function en cada FULL.
 - Fuera de alcance: ECR `/ContactDataStdr`.
 - Secrets Manager: no se necesita (los APIs no usan usuario/clave ni API key, 2026-10-28).
+- Fuera de alcance (2026-10-28): DR en us-west-2, motor de normalizacion de
+  direcciones y su catalogo DIVIPOLA, Validacion 2.0 on-prem y ESB/DataPower.
+  Las Lambdas no van en VPC.
 
 ---
 
