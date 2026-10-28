@@ -40,7 +40,9 @@ locals {
       BillingMode = "PAY_PER_REQUEST"
     },
     local.kms_enabled ? {
-      SSESpecification = { Enabled = true, SSEType = "KMS", KMSMasterKeyId = local.kms_key_arn }
+      # En la integracion aws-sdk de Step Functions los acronimos van como palabra:
+      # SseSpecification / SseType / KmsMasterKeyId (build 75086).
+      SseSpecification = { Enabled = true, SseType = "KMS", KmsMasterKeyId = local.kms_key_arn }
     } : {}
   )
 }

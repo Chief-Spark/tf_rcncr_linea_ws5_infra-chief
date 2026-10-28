@@ -54,6 +54,18 @@ locals {
     }
   }
 
+  # Archivo nuevo en input/. Un solo comodin por patron: con dos (input/*/*.csv)
+  # EventBridge rechaza la regla por compleja (build 75086). El * tambien cubre
+  # la carpeta <batch_id>/.
+  lotes_event_pattern = jsonencode({
+    source        = ["aws.s3"]
+    "detail-type" = ["Object Created"]
+    detail = {
+      bucket = { name = [local.names.s3_lotes] }
+      object = { key = [for ext in ["csv", "CSV", "txt", "TXT"] : { wildcard = "input/*.${ext}" }] }
+    }
+  })
+
   lotes_catch = [{
     ErrorEquals = ["States.ALL"]
     ResultPath  = "$.error"
@@ -99,14 +111,7 @@ module "evb_lotes" {
   description      = "Arranca la Step Function Lotes al subir un archivo a input/ de RecMasterLotes"
   enable_scheduler = false
 
-  event_pattern_json = jsonencode({
-    source        = ["aws.s3"]
-    "detail-type" = ["Object Created"]
-    detail = {
-      bucket = { name = [module.s3_lotes[0].s3_bucket_id] }
-      object = { key = [for ext in ["csv", "CSV", "txt", "TXT"] : { wildcard = "input/*/*.${ext}" }] }
-    }
-  })
+  event_pattern_json = local.lotes_event_pattern
 
   existing_role_arn = module.evb_lotes_role[0].role_arn
   rule_targets = {

@@ -76,8 +76,8 @@ Para actualizar despues de un build:
 | 16 | Lotes: bucket RecMasterLotes | `-recmasterlotes-s3`: `input/`, `plantillas/`, `output_raw/`, `output_zip/` (30 dias) | `lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
 | 17 | Lotes: EventBridge | `-lotes-event`: `.csv`/`.txt` nuevo en `input/<batch_id>/` → SFN Lotes | `lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
 | 18 | Lotes: SFN Lotes | `-lotes-sfn`: Parseo → RecLineaCloud por registro (5 a la vez, 10 % tolerado) → Consolidar; estado en Metadata & Control | `lotes.tf`, `iam-lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
-| 19 | Lotes: Lambda Parseo | `-lotes-parseo-lambda` (python3.13) | `lambda.tf`, `iam-lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
-| 20 | Lotes: Lambda Consolidar | `-lotes-consolidar-lambda` (python3.13) | `lambda.tf`, `iam-lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 19 | Lotes: Lambda Parseo | `-parseo-lambda` (python3.13) | `lambda.tf`, `iam-lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 20 | Lotes: Lambda Consolidar | `-consolidar-lambda` (python3.13) | `lambda.tf`, `iam-lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
 | 20b | Lotes: rol del Portal (on-premise) | `-portal-lotes`: sube a `input/`, lee el estado, descarga `output_zip/` | `iam-lotes.tf` | ⏳ (11) | ⏳ | ⏳ | ⏳ |
 | 21 | RecLineaCloud → Validacion de identidad Cloud (otra cuenta) | Permiso `sts:AssumeRole` al rol cross-account de esa cuenta | `iam-lambda-reclineacloud.tf` | ⏳ (9) | ⏳ | ⏳ | ⏳ |
 | 22 | CMK de KMS propia (S3, SQS, logs, Lambdas, tablas del Import) | `alias/<prefijo>-recmaster-kms` con `eits-tf-aws-kms` 1.10.5 | `kms.tf` | ⏳ (10) | ⏳ | ⏳ | ⏳ |
@@ -194,6 +194,8 @@ Solo se referencian. No llevan marca por ambiente.
 | 2026-10-20 | 74281 | SLCOPRBA-1437 | ✅ | Primer despliegue completo: buckets, Lambdas, Glue, Step Function, EventBridge, API, SQS, roles |
 | 2026-10-28 | 74994 | SLCOPRBA-1526 | ❌ parcial | FULL/DELTA, CTL `7_tablas_finish.json`, reenvio a cuenta Batch, roles COPY y fwd-batch, permisos. Fallo solo el deployment del API |
 | 2026-10-28 | por confirmar | SLCOPRBA-1526 | ✅ | Correccion del deployment del API (`yyhd67`); authorizer retirado del API Int |
+| 2026-10-28 | por confirmar | SLCOPRBA-1526 | ✅ | Lambda de Facturacion y su disparo desde la cola (ya estaban en AWS al correr el 75086) |
+| 2026-10-28 | 75086 | SLCOPRBA-1526 | ❌ parcial | Plan 36 add / 24 change / 0 destroy. Creados: CMK, bucket RecMasterLotes, SFN Lotes, Lambdas Parseo y Consolidar, roles; S3, SQS, logs y Lambdas pasan a la CMK. Fallaron: regla EventBridge de Lotes (patron muy complejo) y la SFN Update (campo `SSESpecification`). Ademas los ARN de Parseo/Consolidar en IAM no coincidian con el nombre real. Corregido en la rama |
 
 ### QA
 

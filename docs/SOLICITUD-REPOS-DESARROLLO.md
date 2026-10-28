@@ -164,7 +164,7 @@ en [7.2](#72-lo-que-ya-esta-definido) y en la
     DESCARGADO.
   - Puntero: `pk = VERSION#GLOBAL`, `sk = ACTIVA`, atributo `tabla_activa`
     (nombre de la tabla `reconocer_master_*` vigente). Lo escribe Validation.
-- **Lambda Parseo** (`-lotes-parseo-lambda`, Python). Recibe
+- **Lambda Parseo** (`-parseo-lambda`, Python). Recibe
   `{batch_id, bucket, s3_key}`. Responde
   `{"registros": [...], "conteo": n, "producto": "...", "perfil": "..."}`. Si el
   archivo no es valido, debe **fallar** (lanzar error): el lote queda FALLIDO.
@@ -173,7 +173,7 @@ en [7.2](#72-lo-que-ya-esta-definido) y en la
   active_table_override, output_mode: "pdf_s3"}`. Escribe
   `output_raw/<batch_id>/<registro_index>.pdf`. Si falla mas del 10 % de los
   registros, el lote queda FALLIDO.
-- **Lambda Consolidar** (`-lotes-consolidar-lambda`, Python). Recibe
+- **Lambda Consolidar** (`-consolidar-lambda`, Python). Recibe
   `{batch_id, conteo}`. Arma `output_zip/<batch_id>/resultado.zip` y responde
   `{"ubicacion_salida": "...", "errores_parciales": n}`.
 - **Portal (on-premise):** asume el rol `-portal-lotes` (se crea cuando
@@ -663,3 +663,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-28 | Es una migracion a AWS, no un MVP: el flujo de Lotes (Cargue de archivos) entra en la IaC. RecLineaCloud llama a Validacion de identidad Cloud con un rol cross-account. Sin Secrets Manager. Pendiente aclarar el ESB. |
 | 2026-10-28 | Revisado el HLD En_Linea_v2. Decisiones: Lotes con EventBridge, Python, 30 dias; Validacion de identidad solo contra el modulo AWS (sin Validacion 2.0 ni ESB, sin VPC); sin normalizacion ni DIVIPOLA; RecMicroservicios ya existe; CMK creada en esta IaC; DR fuera de alcance; se mantiene la carga FULL con CSV directo al Import (decision del 22-oct). |
 | 2026-10-28 | En la rama: flujo de Lotes (bucket, EventBridge, SFN Lotes, Lambdas Parseo y Consolidar, rol del Portal opcional), rol de Validacion de identidad opcional en RecLineaCloud y CMK propia con `eits-tf-aws-kms` 1.10.5. Pendiente de desplegar. |
+| 2026-10-28 | Build 75086: casi todo aplicado (CMK, Lotes, Lambdas). Fallaron la regla EventBridge de Lotes (dos comodines por patron) y la SFN Update (`SSESpecification` debe ir como `SseSpecification`). Los ARN de Parseo/Consolidar en IAM apuntaban a `-lotes-parseo-lambda` y la Lambda real es `-parseo-lambda`. Corregido; pendiente de nuevo build. |
