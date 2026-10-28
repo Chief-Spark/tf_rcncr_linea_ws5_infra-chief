@@ -89,9 +89,8 @@ y el pipeline de cada repo de codigo publica la version real con
 | Codigo de la Lambda | Repo de codigo (su pipeline) |
 | runtime, handler, memoria, timeout, concurrencia, env vars, rol, VPC | Este repo (`lambda.tf`, `var.lambdas`) |
 
-Defaults: RecLineaCloud `java21` (HLD, ADR-08); Authorizer y Validation
-`python3.13` con `handler.lambda_handler`. El handler de RecLineaCloud es
-provisional: confirmarlo con desarrollo.
+Defaults: todas las Lambdas en `python3.13` con `handler.lambda_handler`
+(RecLineaCloud paso de Java a Python el 2026-10-28).
 
 ### Bucket policy de eits-tf-aws-s3
 La libreria niega el acceso a S3 fuera de IPs de Experian / VPC endpoints. Glue,

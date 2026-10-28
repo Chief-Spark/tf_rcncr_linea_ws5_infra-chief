@@ -29,9 +29,9 @@ locals {
     consolidar    = "Lotes: empaqueta los PDF del lote en un ZIP"
   }
 
-  # Defaults por Lambda (sobreescribibles en var.lambdas). Runtimes segun el HLD:
-  # RecLineaCloud en Java 21 (ADR-08); el resto en Python, como las Lambdas de
-  # las guias del equipo (handler.py -> handler.lambda_handler).
+  # Defaults por Lambda (sobreescribibles en var.lambdas). Todas en Python, como
+  # las Lambdas de las guias del equipo (handler.py -> handler.lambda_handler).
+  # RecLineaCloud pasa de Java a Python (decision del equipo, 2026-10-28).
   lambda_defaults = {
     authorizer = {
       runtime                        = "python3.13"
@@ -41,8 +41,8 @@ locals {
       reserved_concurrent_executions = 10
     }
     reclineacloud = {
-      runtime                        = "java21"
-      handler                        = "com.experian.reconocer.linea.Handler::handleRequest" # confirmar con desarrollo
+      runtime                        = "python3.13"
+      handler                        = "handler.lambda_handler"
       memory_size                    = 2048
       timeout                        = 29
       reserved_concurrent_executions = 50

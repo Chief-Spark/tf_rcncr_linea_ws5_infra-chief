@@ -64,7 +64,7 @@ Para actualizar despues de un build:
 | 5 | Step Function Update RecMaster | `-upd-recmaster-sfn` (FULL = S3 Import, DELTA = Glue) | `stepfunctions.tf` | 🟡 (2) | ⏳ | ⏳ | ⏳ |
 | 6 | Glue RecMas_Transform_and_Upload | Job `-recmas-transform-upload` + database `-recmaster-glue` | `glue.tf` | ✅ | ⏳ | ⏳ | ⏳ |
 | 7 | Lambda Validation | `-validation-lambda` (python3.13) | `lambda.tf` | ✅ | ⏳ | ⏳ | ⏳ |
-| 8 | Lambda RecLineaCloud | `-reclineacloud-lambda` (java21) | `lambda.tf` | 🟡 (3) | ⏳ | ⏳ | ⏳ |
+| 8 | Lambda RecLineaCloud | `-reclineacloud-lambda` (python3.13) | `lambda.tf` | 🟡 (3) | ⏳ | ⏳ | ⏳ |
 | 9 | Lambda Authorizer | `-authorizer-lambda` (python3.13) | `lambda.tf` | ✅ | ⏳ | ⏳ | ⏳ |
 | 10 | API Int (Portal) | API PRIVATE, `GET /v1/sujetos/{tipo}/{numero}/reporte/{perfil}` | `apigateway.tf` | ✅ | ⏳ | ⏳ | ⏳ |
 | 11 | API Ext (Apigee) | `POST /v1/microservicios/{operacion}` + authorizer Okta | `apigateway.tf` | ⏳ (4) | ⏳ | ⏳ | ⏳ |
@@ -87,8 +87,8 @@ Notas DEV:
    eventos (`events:PutEvents`). Va en el repo de la cuenta Batch.
 2. El FULL aun no se ha probado. Falta que CE confirme que el permissions
    boundary deja crear, etiquetar y borrar las tablas `reconocer_master_*`.
-3. Falta confirmar el handler real y como se despliega el codigo Java
-   (DevSecOps).
+3. Paso de Java a Python (2026-10-28), pendiente de desplegar. Handler
+   `handler.lambda_handler`, 2048 MB.
 4. Se activa cuando se defina `recmicroservicios_function_name`. Al activarlo se
    crea tambien el authorizer.
 5. Desplegada. Falta la URL del API de facturacion
@@ -134,7 +134,7 @@ La IaC crea las Lambdas con un placeholder. El codigo real lo publica cada repo.
 
 | Repo | Componente | Ticket | DEV | QA | DEMO | PDN |
 |---|---|---|---|---|---|---|
-| `A_RCNCR_LN_RCLNCLD` | RecLineaCloud (Java) | RITM5307356 | ⛔ (a) | ⏳ | ⏳ | ⏳ |
+| `A_RCNCR_LN_RCLNCLD` | RecLineaCloud (Python) | RITM5307356 | ⏳ (a) | ⏳ | ⏳ | ⏳ |
 | `A_RCNCR_LN_ATHRZR` | Lambda Authorizer (Python) | RITM5307364 | ⏳ | ⏳ | ⏳ | ⏳ |
 | `A_RCNCR_LN_VLDTN` | Validation (Python) | RITM5307368 | ⏳ | ⏳ | ⏳ | ⏳ |
 | `A_RCNCR_LN_RCMS_TRNSFRM` | Glue (script en `glue-scripts/`) | RITM5307372 | ⏳ | ⏳ | ⏳ | ⏳ |
@@ -142,7 +142,7 @@ La IaC crea las Lambdas con un placeholder. El codigo real lo publica cada repo.
 | Por pedir | Lambdas Lotes Parseo y Consolidar (Python) | — | ⏳ | ⏳ | ⏳ | ⏳ |
 | UNLOAD Redshift Reconocer | SQL del UNLOAD y `7_tablas_finish.json` ([guia](GUIA-UNLOAD-Y-CARGA.md)) | — | ⏳ | ⏳ | ⏳ | ⏳ |
 
-(a) DevSecOps no tiene plantilla LAMBDA-JAVA. Esperando su respuesta.
+(a) El repo ya se corrigio a Python (antes LAMBDA-JAVA).
 
 ---
 
@@ -163,7 +163,7 @@ La IaC crea las Lambdas con un placeholder. El codigo real lo publica cada repo.
 | 11 | Validar con desarrollo el contrato de la Validation ([seccion 3.3](SOLICITUD-REPOS-DESARROLLO.md#33-a_rcncr_ln_vldtn--validation-python)) | Desarrollo | ⏳ | ⏳ | ⏳ | ⏳ |
 | 12 | Re-ejecutar el build y ver "No changes" (confirma que la IaC quedo estable) | IaC | ⏳ | ⏳ | ⏳ | ⏳ |
 | 13 | CMK de KMS: ver fila 22 de la seccion 3 | IaC | ➖ | ➖ | ➖ | ➖ |
-| 14 | Opcional: SnapStart para RecLineaCloud (la libreria aun no lo soporta) | IaC | ⏳ | ⏳ | ⏳ | ⏳ |
+| 14 | SnapStart para RecLineaCloud: no aplica, ya no es Java | IaC | ➖ | ➖ | ➖ | ➖ |
 
 ---
 

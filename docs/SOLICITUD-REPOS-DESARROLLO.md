@@ -15,7 +15,7 @@
 1. [Inventario de la IaC desplegada (cuenta 147)](#1-inventario-de-la-iac-desplegada-cuenta-147)
 2. [Reparto de responsabilidades](#2-reparto-de-responsabilidades)
 3. [Contrato por repo de desarrollo](#3-contrato-por-repo-de-desarrollo)
-   - [3.1 RecLineaCloud](#31-a_rcncr_ln_rclncld--reclineacloud-java)
+   - [3.1 RecLineaCloud](#31-a_rcncr_ln_rclncld--reclineacloud-python)
    - [3.2 Lambda Authorizer](#32-a_rcncr_ln_athrzr--lambda-authorizer-python)
    - [3.3 Validation](#33-a_rcncr_ln_vldtn--validation-python)
    - [3.4 Glue RecMas_Transform_and_Upload](#34-a_rcncr_ln_rcms_trnsfrm--glue-recmas_transform_and_upload-python)
@@ -39,7 +39,7 @@
 
 | # | Componente (HLD) | Recurso AWS desplegado (develop) | Archivo IaC | Rol IAM | Repo de desarrollo | Ticket |
 |---|---|---|---|---|---|---|
-| 1 | RecLineaCloud | Lambda `dev-647096294147-rcncr-ws5-reclineacloud-lambda` (java21) | `lambda.tf` | `BURoleFor-dev-647096294147-rcncr-ws5-lmbd-reclineacloud` | `A_RCNCR_LN_RCLNCLD` (AWS – LAMBDA-JAVA) | RITM5307356 |
+| 1 | RecLineaCloud | Lambda `dev-647096294147-rcncr-ws5-reclineacloud-lambda` (python3.13) | `lambda.tf` | `BURoleFor-dev-647096294147-rcncr-ws5-lmbd-reclineacloud` | `A_RCNCR_LN_RCLNCLD` (AWS – LAMBDA-ZIP) | RITM5307356 |
 | 2 | Lambda Authorizer (Okta) | Lambda `dev-647096294147-rcncr-ws5-authorizer-lambda` (python3.13) | `lambda.tf` | `BURoleFor-dev-647096294147-rcncr-ws5-lmbd-authorizer` | `A_RCNCR_LN_ATHRZR` (AWS – LAMBDA-ZIP) | RITM5307364 |
 | 3 | Validation | Lambda `dev-647096294147-rcncr-ws5-validation-lambda` (python3.13) | `lambda.tf` | `BURoleFor-dev-647096294147-rcncr-ws5-lmbd-validation` | `A_RCNCR_LN_VLDTN` (AWS – LAMBDA-ZIP) | RITM5307368 |
 | 4 | RecMas_Transform_and_Upload | Glue Job `dev-647096294147-rcncr-ws5-recmas-transform-upload` (Glue 5.0) | `glue.tf` | `BURoleFor-dev-647096294147-rcncr-ws5-glue-transform` | `A_RCNCR_LN_RCMS_TRNSFRM` (AWS – GLUE-PYTHON) | RITM5307372 |
@@ -79,10 +79,10 @@ Terraform no fija `source_code_hash`.
 
 ## 3. Contrato por repo de desarrollo
 
-### 3.1 `A_RCNCR_LN_RCLNCLD` — RecLineaCloud (Java)
+### 3.1 `A_RCNCR_LN_RCLNCLD` — RecLineaCloud (Python)
 - Publica en: `<stage>-647096294147-rcncr-ws5-reclineacloud-lambda`.
-- Runtime `java21`, handler `com.experian.reconocer.linea.Handler::handleRequest`
-  (**provisional**: desarrollo confirma el real y se ajusta en `var.lambdas`).
+- Runtime `python3.13`, handler `handler.lambda_handler` (paso de Java a
+  Python el 2026-10-28).
 - 2048 MB, timeout 29 s (limite de integracion del API), concurrencia 50.
 - Invocada por el API: `GET /v1/sujetos/{tipo}/{numero}/reporte/{perfil}`
   (integracion `AWS_PROXY`). Consumidor: Portal Reconocer, sin authorizer (API
@@ -197,7 +197,7 @@ en [7.2](#72-lo-que-ya-esta-definido) y en la
 
 | # | Repo | Componente | Combinacion | Ticket | Estado |
 |---|---|---|---|---|---|
-| 1 | `A_RCNCR_LN_RCLNCLD` | RecLineaCloud | AWS – LAMBDA-JAVA | RITM5307356 | Creado (2026-10-21) |
+| 1 | `A_RCNCR_LN_RCLNCLD` | RecLineaCloud | AWS – LAMBDA-ZIP (antes LAMBDA-JAVA) | RITM5307356 | Creado (2026-10-21); corregido a Python |
 | 2 | `A_RCNCR_LN_ATHRZR` | Lambda Authorizer | AWS – LAMBDA-ZIP | RITM5307364 | Creado (2026-10-21) |
 | 3 | `A_RCNCR_LN_VLDTN` | Validation | AWS – LAMBDA-ZIP | RITM5307368 | Creado (2026-10-21) |
 | 4 | `A_RCNCR_LN_RCMS_TRNSFRM` | Glue RecMas_Transform_and_Upload | AWS – GLUE-PYTHON | RITM5307372 | Creado (2026-10-21) |
@@ -237,7 +237,7 @@ Nombre Repositorio: A_RCNCR_LN_RCLNCLD
 
 Adicional aplicaciones: Sonar y Checkmarx con AppID 29197.
 
-Contexto: codigo de la Lambda RecLineaCloud (Java 21) del stack Reconocer
+Contexto: codigo de la Lambda RecLineaCloud (Java 21; luego corregido a Python) del stack Reconocer
 Master Linea (SLCOPRBA-1437). La infraestructura ya esta desplegada por
 COAWSPPR/TF_RCNCR_LINEA_WS5_INFRA en la cuenta 647096294147; este repo solo
 publica el codigo en la funcion dev-647096294147-rcncr-ws5-reclineacloud-lambda.
@@ -665,3 +665,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-28 | En la rama: flujo de Lotes (bucket, EventBridge, SFN Lotes, Lambdas Parseo y Consolidar, rol del Portal opcional), rol de Validacion de identidad opcional en RecLineaCloud y CMK propia con `eits-tf-aws-kms` 1.10.5. Pendiente de desplegar. |
 | 2026-10-28 | Build 75086: casi todo aplicado (CMK, Lotes, Lambdas). Fallaron la regla EventBridge de Lotes (dos comodines por patron) y la SFN Update (`SSESpecification` debe ir como `SseSpecification`). Los ARN de Parseo/Consolidar en IAM apuntaban a `-lotes-parseo-lambda` y la Lambda real es `-parseo-lambda`. Corregido; pendiente de nuevo build. |
 | 2026-10-28 | Build 75087 fallo por el agente de Jenkins (`RequestTimeTooSkewed`), sin cambios. Relanzado: SUCCESS, 2 add / 5 change / 0 destroy (regla EventBridge de Lotes, SFN Lotes y SFN Update con la CMK). **CMK, flujo de Lotes y Facturacion desplegados en DEV.** Pendientes: identidad del Portal, rol de Validacion de identidad, URL del API de facturacion y tabla Metadata & Control con `pk` + `sk`. |
+| 2026-10-28 | RecLineaCloud pasa de Java a Python (no habra Lambdas Java). IaC: `python3.13`, `handler.lambda_handler`, se mantienen 2048 MB, 29 s y concurrencia 50. El repo `A_RCNCR_LN_RCLNCLD` ya se corrigio a Python. SnapStart no aplica. Pendiente de desplegar. |
