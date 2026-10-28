@@ -132,7 +132,7 @@ La IaC crea las Lambdas con un placeholder. El codigo real lo publica cada repo.
 | 5 | Nombre de la Lambda RecMicroservicios (API Ext) | Dueno de RecMicroservicios | ⏳ | ⏳ | ⏳ | ⏳ |
 | 6 | Lectura de `reconocer_master_*` para el rol de RecMicroservicios | Dueno de RecMicroservicios | ⏳ | ⏳ | ⏳ | ⏳ |
 | 7 | Variables de Okta (issuer, audience) para el Authorizer | Desarrollo | ⏳ | ⏳ | ⏳ | ⏳ |
-| 8 | Quien pausa y enciende el Redshift Reconocer | Por definir | ⏳ | ⏳ | ⏳ | ⏳ |
+| 8 | Pausa y encendido del Redshift Reconocer: se hace por otro medio (decision 2026-10-28) | Fuera de la IaC | ➖ | ➖ | ➖ | ➖ |
 | 9 | Permiso de `devsecops-sa-jenkins` para comentar en Jira (no bloquea) | Admin Jira | ⏳ | ⏳ | ⏳ | ⏳ |
 | 10 | Permiso de los pipelines de los 4 repos para publicar codigo (`lambda:UpdateFunctionCode`, `s3:PutObject` en `glue-scripts/`) | DevSecOps | ⏳ | ⏳ | ⏳ | ⏳ |
 | 11 | Validar con desarrollo el contrato de la Validation ([seccion 3.3](SOLICITUD-REPOS-DESARROLLO.md#33-a_rcncr_ln_vldtn--validation-python)) | Desarrollo | ⏳ | ⏳ | ⏳ | ⏳ |

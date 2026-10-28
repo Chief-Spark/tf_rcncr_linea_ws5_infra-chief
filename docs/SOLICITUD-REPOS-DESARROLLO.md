@@ -468,10 +468,8 @@ Step Function Update RecMaster; la Step Function Upload usa la misma lista.
 - **Pausa / Resume de Redshift Reconocer: tiene sentido** por costos.
   - Pausarlo apenas termine el UNLOAD (el Glue, el Import y el COPY leen de S3,
     no de Reconocer).
-  - Lo controla el proceso que lanza el calculo. Si es la Step Function de la
-    cuenta Batch, hace falta en la 147 un rol con `redshift:PauseCluster`,
-    `redshift:ResumeCluster` y `redshift:DescribeClusters`, que pueda asumir el
-    rol de esa Step Function.
+  - **Decision 2026-10-28:** la pausa y el encendido se hacen **por otro medio**,
+    fuera de esta IaC y de la Step Function Upload. No se crea rol para eso.
 - **COPY en Redshift Bureau: role chaining** (ya preparado en `iam-redshift.tf`).
   Falta el ARN del rol del Redshift Bureau.
 - **Sin control por tabla dentro de la carpeta de la tabla:** el Import de
@@ -536,8 +534,9 @@ mas el build de la correccion del API).
 
 **Para la IaC**
 
-1. ¿Que proceso lanza hoy el calculo Reconocer? (define quien enciende y apaga
-   el cluster).
+1. ~~¿Que proceso lanza hoy el calculo Reconocer?~~ Resuelto 2026-10-28: la
+   pausa y el encendido del Redshift Reconocer se hacen por otro medio, fuera de
+   la IaC.
 2. ARN del rol IAM del Redshift Bureau (para el COPY).
 3. ¿El Data Sharing Bureau → Reconocer ya existe o es parte de este trabajo?
 4. Ambientes: ¿por ahora solo develop? ¿Que cuentas se usan en qa y produccion?
@@ -625,3 +624,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-28 | Build 74994: plan correcto (11 add, 10 change, 5 destroy). Apply aplico casi todo (Step Function FULL/DELTA, reglas EventBridge, roles nuevos, permisos, variables) y fallo solo en el deployment del API ("Provider produced inconsistent final plan" por el hash de `triggers`). Corregido: el hash usa solo atributos de configuracion. |
 | 2026-10-28 | Build de la correccion (commit `SLCOPRBA-1526 Corrige triggers...`): SUCCESS. Plan 1 add, 1 change, 2 destroy: deployment nuevo `yyhd67`, stage `dev` apuntando a el, borrados el deployment viejo `zu5lcx` y el authorizer. **IaC de la cuenta 147 desplegada completa.** Wiz: PASSED_BY_POLICY. Jenkins no pudo comentar en Jira (sin permiso en la subtarea), no afecta el despliegue. |
 | 2026-10-28 | Creado el checklist central por ambiente `docs/CHECKLIST-DESPLIEGUE.md` (DEV, QA, DEMO, PDN). |
+| 2026-10-28 | Pausa / encendido del Redshift Reconocer: se hace por otro medio, no en la IaC ni en la Step Function Upload. No se crea rol. |
