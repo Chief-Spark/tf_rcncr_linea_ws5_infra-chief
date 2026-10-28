@@ -6,6 +6,9 @@
 >
 > Nombres en develop (build 74281). En otros ambientes cambia el prefijo:
 > `<stage>-<accountId>-rcncr-ws5` con stage = `dev`, `qa`, `demo`, `prod`.
+>
+> Estado por ambiente (desplegado / pendiente) y traza de builds:
+> [CHECKLIST-DESPLIEGUE.md](CHECKLIST-DESPLIEGUE.md).
 
 ## Indice
 
@@ -621,3 +624,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-28 | HU SLCOPRBA-1525 (IaC Reconocer Linea cuenta 147: FULL/DELTA, CTL final y reenvio a cuenta Batch). Commit `3c94bee9aad` en Bitbucket, enlazado a su subtarea SLCOPRBA-1526. |
 | 2026-10-28 | Build 74994: plan correcto (11 add, 10 change, 5 destroy). Apply aplico casi todo (Step Function FULL/DELTA, reglas EventBridge, roles nuevos, permisos, variables) y fallo solo en el deployment del API ("Provider produced inconsistent final plan" por el hash de `triggers`). Corregido: el hash usa solo atributos de configuracion. |
 | 2026-10-28 | Build de la correccion (commit `SLCOPRBA-1526 Corrige triggers...`): SUCCESS. Plan 1 add, 1 change, 2 destroy: deployment nuevo `yyhd67`, stage `dev` apuntando a el, borrados el deployment viejo `zu5lcx` y el authorizer. **IaC de la cuenta 147 desplegada completa.** Wiz: PASSED_BY_POLICY. Jenkins no pudo comentar en Jira (sin permiso en la subtarea), no afecta el despliegue. |
+| 2026-10-28 | Creado el checklist central por ambiente `docs/CHECKLIST-DESPLIEGUE.md` (DEV, QA, DEMO, PDN). |

@@ -77,4 +77,4 @@ sin `source_code_hash`, y cada repo de codigo publica con
 
 ## Pendiente
 
-Ver la seccion **Pendiente** del `README.md` (lista unica, mantenerla ahi).
+Ver [CHECKLIST-DESPLIEGUE.md](CHECKLIST-DESPLIEGUE.md) (lista unica, mantenerla ahi).

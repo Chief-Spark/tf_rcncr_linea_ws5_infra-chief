@@ -112,18 +112,7 @@ Guia para desarrollo del UNLOAD y la carga en DynamoDB y Bureau:
 [docs/GUIA-UNLOAD-Y-CARGA.md](docs/GUIA-UNLOAD-Y-CARGA.md).
 
 ### Pendiente
-- Re-ejecutar el build y confirmar que el plan sale "No changes" (idempotencia).
-- Confirmar el nombre de Metadata & Control (propuesto `reconocer_metadata_control` en `develop/terraform.tfvars`).
-- Confirmar con CE que el permissions boundary permite a la Step Function `dynamodb:ImportTable`, `TagResource` y `DeleteTable` sobre `reconocer_master_*` (si no, el FULL falla en ejecucion, no en el despliegue).
-- Asociar el rol `redshift-unload` al namespace del Redshift Reconocer (lo hace quien administra el namespace).
-- Repo de IaC de la cuenta Batch `TF_RCNCR_LINEA_WS5_BTCH_INFRA` (RITM5324186, radicado; Ticket 5 en [docs/SOLICITUD-REPOS-DESARROLLO.md](docs/SOLICITUD-REPOS-DESARROLLO.md)): rol `BURoleFor-dev-651706752126-rcncr-ws5-redshift-bureau-copy`, policy del bus `default` y Step Function Upload.
-- ARN del rol consumidor de facturacion (otra cuenta).
-- Handler real de RecLineaCloud (y runtime/handler de las Python si difieren del default).
-- Permiso de despliegue (`lambda:UpdateFunctionCode` / `s3:PutObject`) para el pipeline de los 4 repos de desarrollo, ya creados en `COAWSPPR` ([docs/SOLICITUD-REPOS-DESARROLLO.md](docs/SOLICITUD-REPOS-DESARROLLO.md)).
-- Nombre de la Lambda RecMicroservicios (ruta Ext del API).
-- SnapStart para RecLineaCloud: la libreria eits-tf-aws-lambda aun no lo soporta.
-- Script del Glue publicado por su repo en `s3://<upload-staging>/glue-scripts/` (o `glue_script_location`).
-- Step Function: FULL (S3 Import) y DELTA (Glue) implementados; validar con desarrollo el contrato de la Validation (seccion 3.3 del documento).
-- CMK de KMS (`kms_key_arn`), opcional: quita el warning Wiz Serverless-010 de las env vars de las Lambdas.
-- Permiso de `devsecops-sa-jenkins` para comentar en el issue Jira (hoy falla el comentario automatico de Wiz/despliegue; no bloquea).
-- Repetir el despliegue en qa / demo / production (`terraform.tfvars` de cada ambiente).
+Checklist central por ambiente (DEV, QA, DEMO, PDN): que se desplego, que falta
+y la traza de cada build:
+[docs/CHECKLIST-DESPLIEGUE.md](docs/CHECKLIST-DESPLIEGUE.md). Es la lista unica
+de pendientes; mantenerla ahi.
