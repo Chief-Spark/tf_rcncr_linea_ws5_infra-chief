@@ -217,7 +217,12 @@ Repositorio** (plantilla de la guia "Solicitud de repositorios").
 - Country: Colombia
 - Project Key: `COAWSPPR` (mismo proyecto que `TF_RCNCR_LINEA_WS5_INFRA`)
 - App type: AWS
-- AppID (Sonar y Checkmarx): 29197
+- AppID (Sonar y Checkmarx): **8519** (Reconocer Linea).
+
+> Los tickets 1 a 5 se radicaron con **29197**, que es el AppID de *Procesos
+> Especiales Batch*, no de Reconocer Linea. DevSecOps debe corregir Sonar y
+> Checkmarx de esos repos a 8519 (ver checklist, seccion 6). Los textos de abajo
+> quedan como se radicaron; para tickets nuevos usar 8519.
 
 **Reglas de nombre**
 - Mayusculas, sin vocales salvo la que inicia una palabra, palabras separadas por `_`.
@@ -666,3 +671,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-28 | Build 75086: casi todo aplicado (CMK, Lotes, Lambdas). Fallaron la regla EventBridge de Lotes (dos comodines por patron) y la SFN Update (`SSESpecification` debe ir como `SseSpecification`). Los ARN de Parseo/Consolidar en IAM apuntaban a `-lotes-parseo-lambda` y la Lambda real es `-parseo-lambda`. Corregido; pendiente de nuevo build. |
 | 2026-10-28 | Build 75087 fallo por el agente de Jenkins (`RequestTimeTooSkewed`), sin cambios. Relanzado: SUCCESS, 2 add / 5 change / 0 destroy (regla EventBridge de Lotes, SFN Lotes y SFN Update con la CMK). **CMK, flujo de Lotes y Facturacion desplegados en DEV.** Pendientes: identidad del Portal, rol de Validacion de identidad, URL del API de facturacion y tabla Metadata & Control con `pk` + `sk`. |
 | 2026-10-28 | RecLineaCloud pasa de Java a Python (no habra Lambdas Java). IaC: `python3.13`, `handler.lambda_handler`, se mantienen 2048 MB, 29 s y concurrencia 50. El repo `A_RCNCR_LN_RCLNCLD` ya se corrigio a Python. SnapStart no aplica. Pendiente de desplegar. |
+| 2026-10-28 | AppID correcto de Reconocer Linea: **8519** (29197 es de Procesos Especiales Batch). IaC: tag `AppID = 8519` en todos los recursos (solo cambio de tags, sin recrear). Pendiente con DevSecOps: Sonar y Checkmarx de los repos y `.jenkins.yml`. |

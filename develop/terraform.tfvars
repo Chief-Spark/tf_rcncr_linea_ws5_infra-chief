@@ -4,7 +4,7 @@
 environment          = "develop"
 region               = "us-east-1"
 account_id           = "647096294147"
-app_id               = "29197"
+app_id               = "8519" # Reconocer Linea (29197 es Procesos Especiales Batch)
 cost_string          = "1850.CO.600.402014"
 permissions_boundary = "BUPolicyForBoundaryDTO"
 project              = "rcncr-ws5"

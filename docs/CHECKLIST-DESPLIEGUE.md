@@ -164,6 +164,8 @@ La IaC crea las Lambdas con un placeholder. El codigo real lo publica cada repo.
 | 12 | Re-ejecutar el build y ver "No changes" (confirma que la IaC quedo estable) | IaC | ⏳ | ⏳ | ⏳ | ⏳ |
 | 13 | CMK de KMS: ver fila 22 de la seccion 3 | IaC | ➖ | ➖ | ➖ | ➖ |
 | 14 | SnapStart para RecLineaCloud: no aplica, ya no es Java | IaC | ➖ | ➖ | ➖ | ➖ |
+| 15 | AppID: corregir Sonar y Checkmarx de los repos (tickets 1 a 5) de 29197 (Procesos Especiales Batch) a 8519 (Reconocer Linea) | DevSecOps | ⏳ | ⏳ | ⏳ | ⏳ |
+| 16 | AppID en `.jenkins.yml` de este repo: `application` y proyecto Sonar `29197_Procesos-Especiales-Batch-AWS` siguen en 29197. Se cambia cuando DevSecOps confirme el proyecto Sonar del 8519 | DevSecOps | ⏳ | ⏳ | ⏳ | ⏳ |
 
 ---
 
