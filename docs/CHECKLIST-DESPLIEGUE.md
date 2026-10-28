@@ -134,6 +134,11 @@ La IaC crea las Lambdas con un placeholder. El codigo real lo publica cada repo.
 | 7 | Variables de Okta (issuer, audience) para el Authorizer | Desarrollo | ⏳ | ⏳ | ⏳ | ⏳ |
 | 8 | Quien pausa y enciende el Redshift Reconocer | Por definir | ⏳ | ⏳ | ⏳ | ⏳ |
 | 9 | Permiso de `devsecops-sa-jenkins` para comentar en Jira (no bloquea) | Admin Jira | ⏳ | ⏳ | ⏳ | ⏳ |
+| 10 | Permiso de los pipelines de los 4 repos para publicar codigo (`lambda:UpdateFunctionCode`, `s3:PutObject` en `glue-scripts/`) | DevSecOps | ⏳ | ⏳ | ⏳ | ⏳ |
+| 11 | Validar con desarrollo el contrato de la Validation ([seccion 3.3](SOLICITUD-REPOS-DESARROLLO.md#33-a_rcncr_ln_vldtn--validation-python)) | Desarrollo | ⏳ | ⏳ | ⏳ | ⏳ |
+| 12 | Re-ejecutar el build y ver "No changes" (confirma que la IaC quedo estable) | IaC | ⏳ | ⏳ | ⏳ | ⏳ |
+| 13 | Opcional: CMK de KMS (`kms_key_arn`), quita el aviso Wiz Serverless-010 | IaC + CE | ⏳ | ⏳ | ⏳ | ⏳ |
+| 14 | Opcional: SnapStart para RecLineaCloud (la libreria aun no lo soporta) | IaC | ⏳ | ⏳ | ⏳ | ⏳ |
 
 ---
 
