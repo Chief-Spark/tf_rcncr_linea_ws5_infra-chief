@@ -196,6 +196,7 @@ Solo se referencian. No llevan marca por ambiente.
 | 2026-10-28 | por confirmar | SLCOPRBA-1526 | ✅ | Correccion del deployment del API (`yyhd67`); authorizer retirado del API Int |
 | 2026-10-28 | por confirmar | SLCOPRBA-1526 | ✅ | Lambda de Facturacion y su disparo desde la cola (ya estaban en AWS al correr el 75086) |
 | 2026-10-28 | 75086 | SLCOPRBA-1526 | ❌ parcial | Plan 36 add / 24 change / 0 destroy. Creados: CMK, bucket RecMasterLotes, SFN Lotes, Lambdas Parseo y Consolidar, roles; S3, SQS, logs y Lambdas pasan a la CMK. Fallaron: regla EventBridge de Lotes (patron muy complejo) y la SFN Update (campo `SSESpecification`). Ademas los ARN de Parseo/Consolidar en IAM no coincidian con el nombre real. Corregido en la rama |
+| 2026-10-28 | 75087 | SLCOPRBA-1526 | ❌ sin cambios | Plan correcto (2 add, 5 change, 0 destroy) pero fallo en el `plan` por el agente de Jenkins: una lectura quedo colgada 15 min y AWS rechazo la siguiente por `RequestTimeTooSkewed`. No se aplico nada; se relanza el build sin cambios |
 
 ### QA
 
