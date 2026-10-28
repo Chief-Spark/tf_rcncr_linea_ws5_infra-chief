@@ -87,8 +87,8 @@ Notas DEV:
    eventos (`events:PutEvents`). Va en el repo de la cuenta Batch.
 2. El FULL aun no se ha probado. Falta que CE confirme que el permissions
    boundary deja crear, etiquetar y borrar las tablas `reconocer_master_*`.
-3. Paso de Java a Python (2026-10-28), pendiente de desplegar. Handler
-   `handler.lambda_handler`, 2048 MB.
+3. Paso de Java a Python (2026-10-28), desplegado. Handler
+   `handler.lambda_handler`, 2048 MB. Falta publicar el codigo real.
 4. Se activa cuando se defina `recmicroservicios_function_name`. Al activarlo se
    crea tambien el authorizer.
 5. Desplegada. Falta la URL del API de facturacion
@@ -200,6 +200,7 @@ Solo se referencian. No llevan marca por ambiente.
 | 2026-10-28 | 75086 | SLCOPRBA-1526 | ❌ parcial | Plan 36 add / 24 change / 0 destroy. Creados: CMK, bucket RecMasterLotes, SFN Lotes, Lambdas Parseo y Consolidar, roles; S3, SQS, logs y Lambdas pasan a la CMK. Fallaron: regla EventBridge de Lotes (patron muy complejo) y la SFN Update (campo `SSESpecification`). Ademas los ARN de Parseo/Consolidar en IAM no coincidian con el nombre real. Corregido en la rama |
 | 2026-10-28 | 75087 | SLCOPRBA-1526 | ❌ sin cambios | Plan correcto (2 add, 5 change, 0 destroy) pero fallo en el `plan` por el agente de Jenkins: una lectura quedo colgada 15 min y AWS rechazo la siguiente por `RequestTimeTooSkewed`. No se aplico nada; se relanza el build sin cambios |
 | 2026-10-28 | por confirmar (relanzamiento del 75087) | SLCOPRBA-1526 | ✅ | Plan 2 add, 5 change, 0 destroy. Creados: regla EventBridge `-lotes-event` y su destino a la SFN Lotes. Actualizados: SFN Lotes (ARN correctos de Parseo/Consolidar), SFN Update (`SseSpecification` con la CMK) y las policies de Parseo, Consolidar y SFN Lotes. Wiz: PASSED_BY_POLICY. **CMK, Lotes y Facturacion desplegados en DEV** |
+| 2026-10-28 | por confirmar | SLCOPRBA-1526 | ✅ | Plan 1 add, 80 change, 1 destroy (aplicado: 1 add, 75 change, 1 destroy). RecLineaCloud pasa a `python3.13` / `handler.lambda_handler`; tag `AppID` 29197 → 8519 en todos los recursos y en las tablas que etiqueta la SFN Update. El API se re-desplego (`yyhd67` → `oxqeon`, mismo contenido) porque el cambio de tags del API dejo la policy "known after apply" en el hash del deployment. Wiz: mismos avisos de siempre |
 
 ### QA
 
