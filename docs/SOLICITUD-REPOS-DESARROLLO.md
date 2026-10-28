@@ -620,4 +620,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-27 | Ticket 5 (repo IaC de la cuenta Batch) redactado, por radicar. |
 | 2026-10-27 | Radicado el repo de IaC de la cuenta Batch `TF_RCNCR_LINEA_WS5_BTCH_INFRA`: RITM5324186. |
 | 2026-10-27 | Subtarea de despliegue en la 147: SLCOPRBA-1526, rama Bitbucket `feature/SLCOPRBA-1526-desplegar-la-iac-en-develop-cuenta-147`. |
-| 2026-10-28 | Commit `1e7f51e6aa7` en Bitbucket, enlazado a la subtarea SLCOPRBA-1526. |
+| 2026-10-28 | HU SLCOPRBA-1525 (IaC Reconocer Linea cuenta 147: FULL/DELTA, CTL final y reenvio a cuenta Batch). Commit `3c94bee9aad` en Bitbucket, enlazado a su subtarea SLCOPRBA-1526. |
