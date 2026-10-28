@@ -73,6 +73,13 @@ Para actualizar despues de un build:
 | 13 | Rol UNLOAD Redshift Reconocer | `-redshift-unload` | `iam-redshift.tf` | 🟡 (6) | ⏳ | ⏳ | ⏳ |
 | 14 | Rol COPY Redshift Bureau | `-redshift-copy-xacct` (role chaining) | `iam-redshift.tf` | 🟡 (7) | ⏳ | ⏳ | ⏳ |
 | 15 | Rol CloudWatch del API | `-apigw-cloudwatch` (uno por cuenta) | `iam-apigw-cloudwatch.tf` | ✅ | ⏳ | ⏳ | ⏳ |
+| 16 | Lotes: bucket RecMasterLotes | `/input`, `/plantillas`, `/output_raw`, `/output_zip` | por definir | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 17 | Lotes: EventBridge | Regla: archivo nuevo en `/input` → SFN Lotes | por definir | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 18 | Lotes: SFN Lotes (Map State) | Parseo → RecLineaCloud por registro → Consolidar; estados en Metadata & Control | por definir | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 19 | Lotes: Lambda Parseo archivos | | por definir | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 20 | Lotes: Lambda Consolidar | | por definir | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 21 | RecLineaCloud → Validacion de identidad Cloud (otra cuenta) | Permiso `sts:AssumeRole` al rol cross-account de esa cuenta | `iam-lambda-reclineacloud.tf` | ⏳ (9) | ⏳ | ⏳ | ⏳ |
+| 22 | Conexion al ESB (red Experian) | Lambda en VPC si el ESB es privado | `lambda.tf` | ⏳ (10) | ⏳ | ⏳ | ⏳ |
 
 Notas DEV:
 1. La cuenta Batch debe permitir en su bus `default` que la 147 le envie
@@ -89,6 +96,11 @@ Notas DEV:
 6. Falta asociar el rol al namespace del Redshift Reconocer.
 7. Falta crear el rol de Bureau en la cuenta Batch. Cuando exista, la confianza
    se cambia al ARN exacto del rol (se quita el aviso Wiz IAM-146).
+8. Flujo de Lotes (Cargue de archivos): dentro del alcance de la migracion
+   (2026-10-28). En diseno: faltan respuestas de desarrollo.
+9. Falta el ARN del rol cross-account de la cuenta de Validacion de identidad.
+   Esa cuenta debe confiar en `BURoleFor-<prefijo>-lmbd-reclineacloud`.
+10. Por aclarar: que Lambda llama al ESB y si el ESB esta en red privada.
 
 ---
 
@@ -155,6 +167,7 @@ Solo se referencian. No llevan marca por ambiente.
 - Orquesta-Facturacion y su API Gateway (cuenta de facturacion electronica).
 - Tablas DynamoDB `reconocer_master_*`: las crea la Step Function en cada FULL.
 - Fuera de alcance: ECR `/ContactDataStdr`.
+- Secrets Manager: no se necesita (los APIs no usan usuario/clave ni API key, 2026-10-28).
 
 ---
 

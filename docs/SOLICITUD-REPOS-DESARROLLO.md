@@ -626,3 +626,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-28 | Creado el checklist central por ambiente `docs/CHECKLIST-DESPLIEGUE.md` (DEV, QA, DEMO, PDN). |
 | 2026-10-28 | Pausa / encendido del Redshift Reconocer: se hace por otro medio, no en la IaC ni en la Step Function Upload. No se crea rol. |
 | 2026-10-28 | La Lambda de Facturacion es de la 147 y de esta IaC (antes se suponia en otra cuenta). En la rama: Lambda Python, rol `lmbd-facturacion`, disparo desde la cola (1 mensaje por vez); se quita el permiso a consumidores de otra cuenta. Pendiente de desplegar. |
+| 2026-10-28 | Es una migracion a AWS, no un MVP: el flujo de Lotes (Cargue de archivos) entra en la IaC. RecLineaCloud llama a Validacion de identidad Cloud con un rol cross-account. Sin Secrets Manager. Pendiente aclarar el ESB. |
