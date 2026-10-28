@@ -69,18 +69,18 @@ Para actualizar despues de un build:
 | 10 | API Int (Portal) | API PRIVATE, `GET /v1/sujetos/{tipo}/{numero}/reporte/{perfil}` | `apigateway.tf` | ✅ | ⏳ | ⏳ | ⏳ |
 | 11 | API Ext (Apigee) | `POST /v1/microservicios/{operacion}` + authorizer Okta | `apigateway.tf` | ⏳ (4) | ⏳ | ⏳ | ⏳ |
 | 12 | SQS Facturacion | `-facturacion.fifo` + DLQ | `sqs.tf` | ✅ | ⏳ | ⏳ | ⏳ |
-| 12b | Lambda Facturacion | `-facturacion-lambda` (python3.13), la dispara la cola (1 mensaje por vez) | `lambda.tf`, `iam-lambda-facturacion.tf` | ⏳ (5) | ⏳ | ⏳ | ⏳ |
+| 12b | Lambda Facturacion | `-facturacion-lambda` (python3.13), la dispara la cola (1 mensaje por vez) | `lambda.tf`, `iam-lambda-facturacion.tf` | 🟡 (5) | ⏳ | ⏳ | ⏳ |
 | 13 | Rol UNLOAD Redshift Reconocer | `-redshift-unload` | `iam-redshift.tf` | 🟡 (6) | ⏳ | ⏳ | ⏳ |
 | 14 | Rol COPY Redshift Bureau | `-redshift-copy-xacct` (role chaining) | `iam-redshift.tf` | 🟡 (7) | ⏳ | ⏳ | ⏳ |
 | 15 | Rol CloudWatch del API | `-apigw-cloudwatch` (uno por cuenta) | `iam-apigw-cloudwatch.tf` | ✅ | ⏳ | ⏳ | ⏳ |
-| 16 | Lotes: bucket RecMasterLotes | `-recmasterlotes-s3`: `input/`, `plantillas/`, `output_raw/`, `output_zip/` (30 dias) | `lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
-| 17 | Lotes: EventBridge | `-lotes-event`: `.csv`/`.txt` nuevo en `input/<batch_id>/` → SFN Lotes | `lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
-| 18 | Lotes: SFN Lotes | `-lotes-sfn`: Parseo → RecLineaCloud por registro (5 a la vez, 10 % tolerado) → Consolidar; estado en Metadata & Control | `lotes.tf`, `iam-lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
-| 19 | Lotes: Lambda Parseo | `-parseo-lambda` (python3.13) | `lambda.tf`, `iam-lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
-| 20 | Lotes: Lambda Consolidar | `-consolidar-lambda` (python3.13) | `lambda.tf`, `iam-lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 16 | Lotes: bucket RecMasterLotes | `-recmasterlotes-s3`: `input/`, `plantillas/`, `output_raw/`, `output_zip/` (30 dias) | `lotes.tf` | ✅ | ⏳ | ⏳ | ⏳ |
+| 17 | Lotes: EventBridge | `-lotes-event`: `.csv`/`.txt` nuevo en `input/<batch_id>/` → SFN Lotes | `lotes.tf` | ✅ | ⏳ | ⏳ | ⏳ |
+| 18 | Lotes: SFN Lotes | `-lotes-sfn`: Parseo → RecLineaCloud por registro (5 a la vez, 10 % tolerado) → Consolidar; estado en Metadata & Control | `lotes.tf`, `iam-lotes.tf` | 🟡 (8) | ⏳ | ⏳ | ⏳ |
+| 19 | Lotes: Lambda Parseo | `-parseo-lambda` (python3.13) | `lambda.tf`, `iam-lotes.tf` | ✅ | ⏳ | ⏳ | ⏳ |
+| 20 | Lotes: Lambda Consolidar | `-consolidar-lambda` (python3.13) | `lambda.tf`, `iam-lotes.tf` | ✅ | ⏳ | ⏳ | ⏳ |
 | 20b | Lotes: rol del Portal (on-premise) | `-portal-lotes`: sube a `input/`, lee el estado, descarga `output_zip/` | `iam-lotes.tf` | ⏳ (11) | ⏳ | ⏳ | ⏳ |
 | 21 | RecLineaCloud → Validacion de identidad Cloud (otra cuenta) | Permiso `sts:AssumeRole` al rol cross-account de esa cuenta | `iam-lambda-reclineacloud.tf` | ⏳ (9) | ⏳ | ⏳ | ⏳ |
-| 22 | CMK de KMS propia (S3, SQS, logs, Lambdas, tablas del Import) | `alias/<prefijo>-recmaster-kms` con `eits-tf-aws-kms` 1.10.5 | `kms.tf` | ⏳ (10) | ⏳ | ⏳ | ⏳ |
+| 22 | CMK de KMS propia (S3, SQS, logs, Lambdas, tablas del Import) | `alias/<prefijo>-recmaster-kms` con `eits-tf-aws-kms` 1.10.5 | `kms.tf` | ✅ (10) | ⏳ | ⏳ | ⏳ |
 
 Notas DEV:
 1. La cuenta Batch debe permitir en su bus `default` que la 147 le envie
@@ -91,23 +91,23 @@ Notas DEV:
    (DevSecOps).
 4. Se activa cuando se defina `recmicroservicios_function_name`. Al activarlo se
    crea tambien el authorizer.
-5. En la rama, pendiente de desplegar. Falta la URL del API de facturacion
+5. Desplegada. Falta la URL del API de facturacion
    electronica (`facturacion_api_url`) y saber si ese API usa autenticacion IAM
    (`facturacion_api_execute_arn`). La Lambda se crea igual sin esos datos.
 6. Falta asociar el rol al namespace del Redshift Reconocer.
 7. Falta crear el rol de Bureau en la cuenta Batch. Cuando exista, la confianza
    se cambia al ARN exacto del rol (se quita el aviso Wiz IAM-146).
-8. Flujo de Lotes: en la rama, pendiente de desplegar. Contratos en
+8. Flujo de Lotes desplegado. Contratos en
    [SOLICITUD, seccion 3.6](SOLICITUD-REPOS-DESARROLLO.md#36-flujo-de-lotes).
-   Requiere que Metadata & Control tenga llave `pk` + `sk` (texto).
-9. En la rama (opcional). Falta el ARN del rol cross-account
+   La SFN Lotes funciona cuando Metadata & Control exista con llave `pk` + `sk`
+   (texto) y el codigo de Parseo, Consolidar y RecLineaCloud (`pdf_s3`) este
+   publicado.
+9. Opcional, no creado aun. Falta el ARN del rol cross-account
    (`validacion_identidad_role_arn`). Esa cuenta debe confiar en
    `BURoleFor-<prefijo>-lmbd-reclineacloud`.
-10. En la rama (`create_kms_key = true`). Al desplegar, S3, SQS, logs y
-    Lambdas pasan a la CMK (cambio en sitio; los objetos ya guardados quedan
-    con su cifrado anterior). Riesgos: que el rol de Jenkins no pueda crear la
-    llave, o que no exista `BUAdministratorAccessRole` (la libreria la pone
-    como administradora).
+10. Desplegada: llave `ed5cee79-ab9e-48de-9953-57126ace5b2f`. S3, SQS, logs,
+    Lambdas y la SFN Update usan la CMK (los objetos ya guardados quedan con su
+    cifrado anterior).
 11. Opcional: se crea cuando Operacion entregue la identidad AWS del Portal
     (`lotes_portal_principal_arns`).
 
@@ -197,6 +197,7 @@ Solo se referencian. No llevan marca por ambiente.
 | 2026-10-28 | por confirmar | SLCOPRBA-1526 | ✅ | Lambda de Facturacion y su disparo desde la cola (ya estaban en AWS al correr el 75086) |
 | 2026-10-28 | 75086 | SLCOPRBA-1526 | ❌ parcial | Plan 36 add / 24 change / 0 destroy. Creados: CMK, bucket RecMasterLotes, SFN Lotes, Lambdas Parseo y Consolidar, roles; S3, SQS, logs y Lambdas pasan a la CMK. Fallaron: regla EventBridge de Lotes (patron muy complejo) y la SFN Update (campo `SSESpecification`). Ademas los ARN de Parseo/Consolidar en IAM no coincidian con el nombre real. Corregido en la rama |
 | 2026-10-28 | 75087 | SLCOPRBA-1526 | ❌ sin cambios | Plan correcto (2 add, 5 change, 0 destroy) pero fallo en el `plan` por el agente de Jenkins: una lectura quedo colgada 15 min y AWS rechazo la siguiente por `RequestTimeTooSkewed`. No se aplico nada; se relanza el build sin cambios |
+| 2026-10-28 | por confirmar (relanzamiento del 75087) | SLCOPRBA-1526 | ✅ | Plan 2 add, 5 change, 0 destroy. Creados: regla EventBridge `-lotes-event` y su destino a la SFN Lotes. Actualizados: SFN Lotes (ARN correctos de Parseo/Consolidar), SFN Update (`SseSpecification` con la CMK) y las policies de Parseo, Consolidar y SFN Lotes. Wiz: PASSED_BY_POLICY. **CMK, Lotes y Facturacion desplegados en DEV** |
 
 ### QA
 
