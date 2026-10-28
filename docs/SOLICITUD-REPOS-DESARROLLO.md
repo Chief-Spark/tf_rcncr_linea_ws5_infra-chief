@@ -82,13 +82,12 @@ Terraform no fija `source_code_hash`.
 - 2048 MB, timeout 29 s (limite de integracion del API), concurrencia 50.
 - Invocada por el API: `GET /v1/sujetos/{tipo}/{numero}/reporte/{perfil}`
   (integracion `AWS_PROXY`). Consumidor: Portal Reconocer, sin authorizer (API
-  PRIVATE, solo entra por el VPC endpoint). *Cambio en la rama, pendiente de
-  desplegar: hoy en AWS esta ruta aun usa el authorizer.*
+  PRIVATE, solo entra por el VPC endpoint). *Desplegado 2026-10-28.*
 - Variables de entorno que entrega la IaC:
   - `SQS_FACTURACION_URL`: cola FIFO de facturacion (envia `MessageGroupId`).
   - `TABLE_CONTROL` (Metadata & Control) y `TABLE_MASTER_PREFIX`
     (`reconocer_master_`): la tabla vigente se lee del puntero en Metadata &
-    Control. *Pendiente de desplegar.*
+    Control. *Desplegado 2026-10-28.*
   - `OUTPUT_BUCKET`: solo si se define `reclinea_output_bucket`.
 - Permisos: lectura DynamoDB (cuando haya tablas), `sqs:SendMessage` a la cola.
 
@@ -97,8 +96,8 @@ Terraform no fija `source_code_hash`.
 - Runtime `python3.13`, handler `handler.lambda_handler`, 256 MB, 10 s.
 - Protege **solo el API Ext** (accesos desde Apigee, ruta
   `POST /v1/microservicios/{operacion}`); el API Int no lo usa. Se asocia al API
-  cuando se configura `recmicroservicios_function_name`. *Cambio en la rama,
-  pendiente de desplegar.*
+  cuando se configura `recmicroservicios_function_name`. Hoy no esta asociado
+  (el authorizer del API se borro el 2026-10-28; se crea solo con el API Ext).
 - Authorizer tipo **TOKEN**: recibe el header `Authorization` (JWT Okta) y debe
   devolver una policy IAM (`Allow`/`Deny` sobre `execute-api:Invoke`). Cache de
   resultado: 300 s.
@@ -113,7 +112,7 @@ Terraform no fija `source_code_hash`.
   (`run_id`, `tipo_carga`, `dominio`) y su respuesta es la salida del item.
 - Variables de entorno: `BUCKET_STAGING`, `BUCKET_TRIGGERS`, `TABLE_CONTROL` y
   `TABLE_MASTER_PREFIX`.
-- **FULL** (*pendiente de desplegar*): la Step Function la invoca una vez, despues
+- **FULL** (*desplegado 2026-10-28*): la Step Function la invoca una vez, despues
   del S3 Import, con `{run_id, tipo_carga, dominios, tabla_nueva, importacion}`
   (`importacion` = descripcion del Import: `ImportedItemCount`, `ErrorCount`...).
   Debe:
@@ -123,8 +122,8 @@ Terraform no fija `source_code_hash`.
   Con `OK` y `tabla_anterior`, la Step Function espera 5 minutos y borra esa
   tabla (solo si empieza por `reconocer_master_` y no es la nueva).
 - Escribe su reporte en `s3://<upload-staging>/validacion/<run_id>/` (formato en
-  la [guia, seccion 7](GUIA-UNLOAD-Y-CARGA.md#7-validaciones)). *Permiso en la
-  rama, pendiente de desplegar.*
+  la [guia, seccion 7](GUIA-UNLOAD-Y-CARGA.md#7-validaciones)). *Permiso
+  desplegado 2026-10-28.*
 
 ### 3.4 `A_RCNCR_LN_RCMS_TRNSFRM` — Glue RecMas_Transform_and_Upload (Python)
 - Publica el script en:
@@ -132,7 +131,7 @@ Terraform no fija `source_code_hash`.
   (configurable con `glue_script_location`).
 - Glue 5.0, G.1X, 10 workers, timeout 480 min.
 - Argumentos fijos: `--TempDir`, `--BUCKET_TRIGGERS`, `--BUCKET_STAGING`,
-  `--TABLE_CONTROL` y `--TABLE_MASTER_PREFIX` (*pendiente de desplegar*). En DELTA
+  `--TABLE_CONTROL` y `--TABLE_MASTER_PREFIX` (*desplegado 2026-10-28*). En DELTA
   el Glue lee el puntero en Metadata & Control y escribe en la tabla vigente.
 - Argumentos por ejecucion (desde la Step Function): `--run_id`, `--tipo_carga`,
   `--dominio`, `--s3_path`, `--registros_esperados`.
@@ -495,8 +494,8 @@ Step Function Update RecMaster; la Step Function Upload usa la misma lista.
 
 ### 7.5 Impacto de FULL / DELTA en el despliegue (cuenta 147)
 
-**Implementado en la rama el 2026-10-27, pendiente de desplegar** (un solo
-traslado a Bitbucket con todos los ajustes).
+**Desplegado en develop el 2026-10-28** (subtarea SLCOPRBA-1526; build 74994
+mas el build de la correccion del API).
 
 1. **Step Function Update RecMaster:** agregar una decision por `tipo_carga`:
    - `DELTA` → camino actual (Glue + Validation).
@@ -518,8 +517,7 @@ traslado a Bitbucket con todos los ajustes).
    Metadata & Control), no de una variable fija. Validation escribe el puntero.
 5. **Validation → Upload_Staging:** escribe un reporte por tabla y un resumen en
    `validacion/<run_id>/` (aprobado 2026-10-22). Permiso `s3:PutObject` solo
-   sobre `validacion/*` agregado en `iam-lambda-validation.tf`: **en la rama,
-   pendiente de desplegar**.
+   sobre `validacion/*` en `iam-lambda-validation.tf`: **desplegado**.
 6. **EventBridge:** la regla dispara con `nov/*/7_tablas_finish.json` y una regla
    nueva (`dev-647096294147-rcncr-ws5-fwd-batch-event`, rol `evb-fwd-batch`)
    reenvia el mismo evento al bus `default` de la cuenta 651706752126.
@@ -622,3 +620,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-27 | Subtarea de despliegue en la 147: SLCOPRBA-1526, rama Bitbucket `feature/SLCOPRBA-1526-desplegar-la-iac-en-develop-cuenta-147`. |
 | 2026-10-28 | HU SLCOPRBA-1525 (IaC Reconocer Linea cuenta 147: FULL/DELTA, CTL final y reenvio a cuenta Batch). Commit `3c94bee9aad` en Bitbucket, enlazado a su subtarea SLCOPRBA-1526. |
 | 2026-10-28 | Build 74994: plan correcto (11 add, 10 change, 5 destroy). Apply aplico casi todo (Step Function FULL/DELTA, reglas EventBridge, roles nuevos, permisos, variables) y fallo solo en el deployment del API ("Provider produced inconsistent final plan" por el hash de `triggers`). Corregido: el hash usa solo atributos de configuracion. |
+| 2026-10-28 | Build de la correccion (commit `SLCOPRBA-1526 Corrige triggers...`): SUCCESS. Plan 1 add, 1 change, 2 destroy: deployment nuevo `yyhd67`, stage `dev` apuntando a el, borrados el deployment viejo `zu5lcx` y el authorizer. **IaC de la cuenta 147 desplegada completa.** Wiz: PASSED_BY_POLICY. Jenkins no pudo comentar en Jira (sin permiso en la subtarea), no afecta el despliegue. |
