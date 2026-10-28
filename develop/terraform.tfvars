@@ -23,8 +23,10 @@ dynamodb_metadata_control_table = "reconocer_metadata_control"
 recmicroservicios_function_name = ""
 
 # --- Transversales ---
-# CMK que cifra S3/SQS/logs. Vacio = cifrado administrado por AWS (SSE-S3 / SSE-SQS).
-kms_key_arn = ""
+# CMK del stack (trunk/kms.tf): cifra S3, SQS, logs, Lambdas y las tablas del
+# S3 Import. kms_key_arn solo si se usa una CMK existente (no ambos).
+create_kms_key = true
+kms_key_arn    = ""
 
 # Glue, Step Function, Validation y Redshift llaman a S3 desde la red de AWS: se
 # desactiva la regla de IPs de origen de eits-tf-aws-s3 en nuestros buckets.
@@ -56,6 +58,23 @@ reclinea_output_bucket = ""
 # autenticacion IAM, su ARN execute-api. Vacio = la Lambda se crea igual.
 facturacion_api_url         = ""
 facturacion_api_execute_arn = ""
+
+# --- Validacion de identidad (API de otra cuenta AWS) ---
+# PENDIENTE: ARN del rol cross-account que entrega el dueno de Validacion de
+# identidad. Ese rol debe confiar en BURoleFor-dev-647096294147-rcncr-ws5-lmbd-reclineacloud.
+validacion_identidad_role_arn = ""
+
+# --- Lotes (Cargue de archivos) ---
+# Bucket RecMasterLotes, EventBridge, Step Function Lotes, Lambdas Parseo y
+# Consolidar. Archivos de input/ y output_*/ se borran a los 30 dias; RecLineaCloud
+# resuelve 5 registros a la vez; el lote falla con mas de 10 % de registros fallidos.
+enable_lotes                       = true
+lotes_retention_days               = 30
+lotes_max_concurrency              = 5
+lotes_tolerated_failure_percentage = 10
+# PENDIENTE (Operacion): identidad AWS del Portal on-premise. Vacio = no se crea
+# el rol portal-lotes.
+lotes_portal_principal_arns = []
 
 # --- Triggers_reconocer ---
 # El rol redshift-unload se crea siempre; asociarlo al namespace del Redshift

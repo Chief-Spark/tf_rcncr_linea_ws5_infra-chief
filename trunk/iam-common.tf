@@ -52,14 +52,29 @@ data "aws_iam_policy_document" "lambda_base" {
   }
 }
 
-# Uso de la CMK (S3 y SQS cifrados). Vacio si no se define kms_key_arn.
+# Uso de la CMK (S3, SQS, variables de entorno). Vacio si no hay CMK.
 data "aws_iam_policy_document" "kms_use" {
   dynamic "statement" {
-    for_each = var.kms_key_arn == "" ? [] : [1]
+    for_each = local.kms_enabled ? [1] : []
     content {
       sid       = "KmsUse"
       actions   = ["kms:Decrypt", "kms:GenerateDataKey", "kms:DescribeKey"]
-      resources = [var.kms_key_arn]
+      resources = [local.kms_key_arn]
+    }
+  }
+
+  # Tablas DynamoDB con la CMK (S3 Import): DynamoDB usa grants sobre la llave.
+  dynamic "statement" {
+    for_each = local.kms_enabled ? [1] : []
+    content {
+      sid       = "KmsGrantsForAwsResources"
+      actions   = ["kms:CreateGrant"]
+      resources = [local.kms_key_arn]
+      condition {
+        test     = "Bool"
+        variable = "kms:GrantIsForAWSResource"
+        values   = ["true"]
+      }
     }
   }
 }

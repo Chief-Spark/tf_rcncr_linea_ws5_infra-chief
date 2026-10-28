@@ -1,7 +1,7 @@
 # Paquete placeholder de las Lambdas
 
 `lambda-placeholder.zip` es el paquete con el que Terraform **crea** las Lambdas
-(Authorizer, RecLineaCloud, Validation y Facturacion). Se envia directo en `CreateFunction`:
+(Authorizer, RecLineaCloud, Validation, Facturacion, Parseo y Consolidar). Se envia directo en `CreateFunction`:
 no se sube nada a S3.
 
 El codigo real vive en los repos de codigo y su pipeline lo publica con

@@ -1,6 +1,9 @@
 # Rol de la Lambda Authorizer (valida JWT de Okta en el borde del API Gateway).
 data "aws_iam_policy_document" "lambda_authorizer" {
-  source_policy_documents = [data.aws_iam_policy_document.lambda_base["authorizer"].json]
+  source_policy_documents = [
+    data.aws_iam_policy_document.lambda_base["authorizer"].json,
+    data.aws_iam_policy_document.kms_use.json
+  ]
 }
 
 module "lambda_authorizer_role" {

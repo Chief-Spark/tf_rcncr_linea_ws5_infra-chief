@@ -20,6 +20,7 @@
    - [3.3 Validation](#33-a_rcncr_ln_vldtn--validation-python)
    - [3.4 Glue RecMas_Transform_and_Upload](#34-a_rcncr_ln_rcms_trnsfrm--glue-recmas_transform_and_upload-python)
    - [3.5 Archivo que dispara la carga](#35-archivo-que-dispara-la-carga)
+   - [3.6 Flujo de Lotes](#36-flujo-de-lotes)
 4. [Lo que necesita cada pipeline de desarrollo](#4-lo-que-necesita-cada-pipeline-de-desarrollo)
 5. [Repos de desarrollo: seguimiento](#5-repos-de-desarrollo-seguimiento)
 6. [Repos de desarrollo: tickets](#6-repos-de-desarrollo-tickets)
@@ -145,6 +146,39 @@ reenvio a la cuenta Batch (regla `nov/*/7_tablas_finish.json`; *pendiente de
 desplegar*: hoy en AWS la regla aun espera `manifest.json`). Formato y contenido
 en [7.2](#72-lo-que-ya-esta-definido) y en la
 [guia, seccion 4](GUIA-UNLOAD-Y-CARGA.md#4-paso-2-archivo-final-7_tablas_finishjson).
+
+### 3.6 Flujo de Lotes
+*En la rama, pendiente de desplegar* (`lotes.tf`, `iam-lotes.tf`).
+
+- **Bucket** `<stage>-647096294147-rcncr-ws5-recmasterlotes-s3` (variable
+  `BUCKET_LOTES` en las Lambdas):
+  - `input/<batch_id>/<archivo>.csv|.txt`: lo sube el Portal. Dispara el flujo.
+  - `plantillas/`: plantillas de los PDF. No se borra.
+  - `output_raw/<batch_id>/`: un PDF por registro (RecLineaCloud).
+  - `output_zip/<batch_id>/resultado.zip`: lo arma Consolidar.
+  - `input/` y `output_*/` se borran a los 30 dias.
+- **Tabla Metadata & Control:** llave `pk` + `sk` (texto).
+  - Lote: `pk = BATCH#<batch_id>`, `sk = ESTADO`. Atributos: `estado`
+    (RECIBIDO, VALIDADO, EN_PROCESO, PROCESADO, FALLIDO), `actualizado`,
+    `s3_key`, `conteo`, `resultado`, `detalle_error`. El Portal lo marca
+    DESCARGADO.
+  - Puntero: `pk = VERSION#GLOBAL`, `sk = ACTIVA`, atributo `tabla_activa`
+    (nombre de la tabla `reconocer_master_*` vigente). Lo escribe Validation.
+- **Lambda Parseo** (`-lotes-parseo-lambda`, Python). Recibe
+  `{batch_id, bucket, s3_key}`. Responde
+  `{"registros": [...], "conteo": n, "producto": "...", "perfil": "..."}`. Si el
+  archivo no es valido, debe **fallar** (lanzar error): el lote queda FALLIDO.
+- **RecLineaCloud en lotes.** La Step Function la llama por registro, 5 a la
+  vez, con `{batch_id, registro_index, registro, producto, perfil,
+  active_table_override, output_mode: "pdf_s3"}`. Escribe
+  `output_raw/<batch_id>/<registro_index>.pdf`. Si falla mas del 10 % de los
+  registros, el lote queda FALLIDO.
+- **Lambda Consolidar** (`-lotes-consolidar-lambda`, Python). Recibe
+  `{batch_id, conteo}`. Arma `output_zip/<batch_id>/resultado.zip` y responde
+  `{"ubicacion_salida": "...", "errores_parciales": n}`.
+- **Portal (on-premise):** asume el rol `-portal-lotes` (se crea cuando
+  Operacion entregue su identidad AWS). Sube a `input/`, lee el estado del lote
+  y descarga el ZIP con URL firmada.
 
 ---
 
@@ -628,3 +662,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-28 | La Lambda de Facturacion es de la 147 y de esta IaC (antes se suponia en otra cuenta). En la rama: Lambda Python, rol `lmbd-facturacion`, disparo desde la cola (1 mensaje por vez); se quita el permiso a consumidores de otra cuenta. Pendiente de desplegar. |
 | 2026-10-28 | Es una migracion a AWS, no un MVP: el flujo de Lotes (Cargue de archivos) entra en la IaC. RecLineaCloud llama a Validacion de identidad Cloud con un rol cross-account. Sin Secrets Manager. Pendiente aclarar el ESB. |
 | 2026-10-28 | Revisado el HLD En_Linea_v2. Decisiones: Lotes con EventBridge, Python, 30 dias; Validacion de identidad solo contra el modulo AWS (sin Validacion 2.0 ni ESB, sin VPC); sin normalizacion ni DIVIPOLA; RecMicroservicios ya existe; CMK creada en esta IaC; DR fuera de alcance; se mantiene la carga FULL con CSV directo al Import (decision del 22-oct). |
+| 2026-10-28 | En la rama: flujo de Lotes (bucket, EventBridge, SFN Lotes, Lambdas Parseo y Consolidar, rol del Portal opcional), rol de Validacion de identidad opcional en RecLineaCloud y CMK propia con `eits-tf-aws-kms` 1.10.5. Pendiente de desplegar. |

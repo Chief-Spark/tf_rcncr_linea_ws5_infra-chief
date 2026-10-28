@@ -5,7 +5,7 @@ resource "aws_sqs_queue" "facturacion_dlq" {
   name                      = local.names.sqs_facturacion_dlq
   fifo_queue                = true
   message_retention_seconds = 1209600
-  sqs_managed_sse_enabled   = local.kms_key_arn == null ? true : null
+  sqs_managed_sse_enabled   = local.kms_enabled ? null : true
   kms_master_key_id         = local.kms_key_arn
 }
 
@@ -14,7 +14,7 @@ resource "aws_sqs_queue" "facturacion" {
   fifo_queue                  = true
   content_based_deduplication = true
   visibility_timeout_seconds  = var.facturacion_visibility_timeout_seconds
-  sqs_managed_sse_enabled     = local.kms_key_arn == null ? true : null
+  sqs_managed_sse_enabled     = local.kms_enabled ? null : true
   kms_master_key_id           = local.kms_key_arn
 
   redrive_policy = jsonencode({

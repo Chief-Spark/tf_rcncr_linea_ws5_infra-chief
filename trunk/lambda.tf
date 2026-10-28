@@ -7,18 +7,26 @@
 # source_code_hash. La CONFIGURACION (runtime, handler, memoria, env vars) si es
 # de este repo: si el pipeline del codigo la cambia, el siguiente build la pisa.
 locals {
-  lambda_role_arns = {
-    authorizer    = module.lambda_authorizer_role.role_arn
-    reclineacloud = module.lambda_reclineacloud_role.role_arn
-    validation    = module.lambda_validation_role.role_arn
-    facturacion   = module.lambda_facturacion_role.role_arn
-  }
+  lambda_role_arns = merge(
+    {
+      authorizer    = module.lambda_authorizer_role.role_arn
+      reclineacloud = module.lambda_reclineacloud_role.role_arn
+      validation    = module.lambda_validation_role.role_arn
+      facturacion   = module.lambda_facturacion_role.role_arn
+    },
+    var.enable_lotes ? {
+      parseo     = module.lambda_parseo_role[0].role_arn
+      consolidar = module.lambda_consolidar_role[0].role_arn
+    } : {}
+  )
 
   lambda_descriptions = {
     authorizer    = "Lambda Authorizer (Okta JWT) del API Reconocer Linea"
     reclineacloud = "RecLineaCloud: consumo en linea de Reconocer Master"
     validation    = "Validacion de integridad de la carga de Base_Online"
     facturacion   = "Facturacion: lee la cola SQS y envia al API de facturacion electronica"
+    parseo        = "Lotes: lee y valida el archivo de entrada y devuelve sus registros"
+    consolidar    = "Lotes: empaqueta los PDF del lote en un ZIP"
   }
 
   # Defaults por Lambda (sobreescribibles en var.lambdas). Runtimes segun el HLD:
@@ -55,6 +63,21 @@ locals {
       timeout                        = 10
       reserved_concurrent_executions = 5
     }
+    # Lotes: archivo de hasta 99 registros (a mediano plazo ~1.000).
+    parseo = {
+      runtime                        = "python3.13"
+      handler                        = "handler.lambda_handler"
+      memory_size                    = 512
+      timeout                        = 60
+      reserved_concurrent_executions = 5
+    }
+    consolidar = {
+      runtime                        = "python3.13"
+      handler                        = "handler.lambda_handler"
+      memory_size                    = 1024
+      timeout                        = 300
+      reserved_concurrent_executions = 5
+    }
   }
 
   lambda_config = {
@@ -72,13 +95,17 @@ locals {
     reclineacloud = merge(
       local.dynamodb_env,
       { SQS_FACTURACION_URL = aws_sqs_queue.facturacion.url },
-      var.reclinea_output_bucket != "" ? { OUTPUT_BUCKET = var.reclinea_output_bucket } : {}
+      var.reclinea_output_bucket != "" ? { OUTPUT_BUCKET = var.reclinea_output_bucket } : {},
+      var.enable_lotes ? { BUCKET_LOTES = local.names.s3_lotes } : {},
+      var.validacion_identidad_role_arn != "" ? { VALIDACION_IDENTIDAD_ROLE_ARN = var.validacion_identidad_role_arn } : {}
     )
     validation = merge(local.dynamodb_env, {
       BUCKET_STAGING  = module.s3_staging.s3_bucket_id
       BUCKET_TRIGGERS = module.s3_triggers.s3_bucket_id
     })
     facturacion = var.facturacion_api_url != "" ? { FACTURACION_API_URL = var.facturacion_api_url } : {}
+    parseo      = { BUCKET_LOTES = local.names.s3_lotes }
+    consolidar  = { BUCKET_LOTES = local.names.s3_lotes }
   }
 }
 

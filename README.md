@@ -42,10 +42,12 @@ valores son opcionales: si estan vacios se omite el permiso o la ruta asociada.
 |---|---|---|
 | `s3.tf` | Buckets Triggers_reconocer (notifica a EventBridge) y Upload_Staging | `eits-tf-aws-s3` 2.19.2 |
 | `sqs.tf` | SQS FIFO de facturacion + DLQ (la lee la Lambda de Facturacion, `lambda.tf`) | nativo |
-| `lambda.tf` | Lambdas Authorizer, RecLineaCloud, Validation y Facturacion | `eits-tf-aws-lambda` 1.11.2 |
+| `lambda.tf` | Lambdas Authorizer, RecLineaCloud, Validation, Facturacion, Parseo y Consolidar | `eits-tf-aws-lambda` 1.11.2 |
 | `apigateway.tf` | API REST privado: Int -> RecLineaCloud, Ext -> RecMicroservicios | nativo (ver nota) |
 | `glue.tf` | Glue Job RecMas_Transform_and_Upload | `eits-tf-aws-glue` 1.5.1 |
 | `stepfunctions.tf` | Step Function Update RecMaster (Distributed Map) | nativo |
+| `lotes.tf` | Lotes: bucket RecMasterLotes, regla EventBridge y Step Function Lotes | `eits-tf-aws-s3` 2.19.2, `eits-tf-aws-eventbridge` 2.7.0, SFN nativa |
+| `kms.tf` | CMK del stack (S3, SQS, logs, Lambdas, tablas del S3 Import) | `eits-tf-aws-kms` 1.10.5 |
 | `eventbridge.tf` | Regla EventBridge Update (manifiesto -> Step Function) | `eits-tf-aws-eventbridge` 2.7.0 |
 | `iam-*.tf` | Un rol por componente | `eits-tf-aws-iam` 1.9.7 |
 | `iam-apigw-cloudwatch.tf` | Rol de CloudWatch de API Gateway (configuracion a nivel cuenta) | `eits-tf-aws-iam` 1.9.7 |

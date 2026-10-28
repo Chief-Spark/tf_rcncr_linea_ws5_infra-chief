@@ -78,10 +78,21 @@ variable "recmicroservicios_function_name" {
 }
 
 # --- Transversales ---
+variable "create_kms_key" {
+  description = "Crea la CMK del stack (kms.tf) y cifra con ella S3, SQS, logs, Lambdas y las tablas del S3 Import."
+  type        = bool
+  default     = false
+}
+
 variable "kms_key_arn" {
-  description = "ARN de la CMK (KMS) para S3/SQS/logs. Vacio = cifrado administrado por AWS (SSE-S3 / SSE-SQS)."
+  description = "ARN de una CMK existente. Solo si create_kms_key = false. Vacio y sin create_kms_key = cifrado administrado por AWS (SSE-S3 / SSE-SQS)."
   type        = string
   default     = ""
+
+  validation {
+    condition     = !(var.create_kms_key && var.kms_key_arn != "")
+    error_message = "Use create_kms_key o kms_key_arn, no ambos."
+  }
 }
 
 variable "s3_disable_source_ip_check" {
@@ -110,7 +121,7 @@ variable "enable_lambdas" {
 
 variable "lambdas" {
   description = <<EOF
-  Ajustes por Lambda (claves: authorizer, reclineacloud, validation, facturacion). Todo es opcional: lo omitido toma el
+  Ajustes por Lambda (claves: authorizer, reclineacloud, validation, facturacion, parseo, consolidar). Todo es opcional: lo omitido toma el
   default de lambda.tf. runtime y handler deben coincidir con el codigo real que publica el repo de codigo:
   update-function-code solo cambia el codigo, la configuracion la mantiene este repo.
   EOF
@@ -125,8 +136,8 @@ variable "lambdas" {
   default = {}
 
   validation {
-    condition     = alltrue([for k in keys(var.lambdas) : contains(["authorizer", "reclineacloud", "validation", "facturacion"], k)])
-    error_message = "Las claves de var.lambdas deben ser authorizer, reclineacloud, validation o facturacion."
+    condition     = alltrue([for k in keys(var.lambdas) : contains(["authorizer", "reclineacloud", "validation", "facturacion", "parseo", "consolidar"], k)])
+    error_message = "Las claves de var.lambdas deben ser authorizer, reclineacloud, validation, facturacion, parseo o consolidar."
   }
 }
 
@@ -186,6 +197,54 @@ variable "facturacion_max_receive_count" {
   description = "Intentos antes de mover el mensaje a la DLQ."
   type        = number
   default     = 5
+}
+
+# --- Validacion de identidad (API de otra cuenta AWS) ---
+variable "validacion_identidad_role_arn" {
+  description = "ARN del rol cross-account que RecLineaCloud asume para llamar a Validacion de identidad. Vacio = sin permiso."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.validacion_identidad_role_arn == "" || can(regex("^arn:aws:iam::[0-9]{12}:role/.+$", var.validacion_identidad_role_arn))
+    error_message = "validacion_identidad_role_arn debe ser el ARN de un rol IAM (arn:aws:iam::<cuenta>:role/<nombre>)."
+  }
+}
+
+# --- Lotes (Cargue de archivos) ---
+variable "enable_lotes" {
+  description = "Crea el flujo de Lotes: bucket RecMasterLotes, EventBridge, Step Function Lotes y Lambdas Parseo y Consolidar. Requiere dynamodb_metadata_control_table."
+  type        = bool
+  default     = false
+}
+
+variable "lotes_retention_days" {
+  description = "Dias que se guardan los archivos de input/, output_raw/ y output_zip/ (plantillas/ no se borra)."
+  type        = number
+  default     = 30
+}
+
+variable "lotes_max_concurrency" {
+  description = "Registros que RecLineaCloud resuelve a la vez por lote (rate limit de Validacion de identidad)."
+  type        = number
+  default     = 5
+}
+
+variable "lotes_tolerated_failure_percentage" {
+  description = "Porcentaje de registros fallidos que se tolera antes de marcar el lote FALLIDO."
+  type        = number
+  default     = 10
+
+  validation {
+    condition     = var.lotes_tolerated_failure_percentage >= 0 && var.lotes_tolerated_failure_percentage <= 100
+    error_message = "lotes_tolerated_failure_percentage debe estar entre 0 y 100."
+  }
+}
+
+variable "lotes_portal_principal_arns" {
+  description = "ARNs de la identidad del Portal (on-premise, la entrega Operacion) que asume el rol portal-lotes. Vacio = no se crea el rol."
+  type        = list(string)
+  default     = []
 }
 
 # --- Triggers_reconocer ---

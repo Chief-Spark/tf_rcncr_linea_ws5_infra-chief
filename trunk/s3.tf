@@ -9,7 +9,7 @@ module "s3_triggers" {
 
   prefix                  = local.name_prefix
   bucket_name             = "triggers-reconocer" # => dev-647096294147-rcncr-ws5-triggers-reconocer-s3
-  sse_algorithm           = local.kms_key_arn == null ? "AES256" : "aws:kms"
+  sse_algorithm           = local.kms_enabled ? "aws:kms" : "AES256"
   kms_key_arn             = local.kms_key_arn
   disable_source_ip_check = var.s3_disable_source_ip_check
 
@@ -28,7 +28,7 @@ module "s3_staging" {
 
   prefix                  = local.name_prefix
   bucket_name             = "upload-staging" # => dev-647096294147-rcncr-ws5-upload-staging-s3
-  sse_algorithm           = local.kms_key_arn == null ? "AES256" : "aws:kms"
+  sse_algorithm           = local.kms_enabled ? "aws:kms" : "AES256"
   kms_key_arn             = local.kms_key_arn
   disable_source_ip_check = var.s3_disable_source_ip_check
 

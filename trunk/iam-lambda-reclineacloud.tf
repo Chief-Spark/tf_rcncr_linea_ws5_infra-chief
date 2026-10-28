@@ -1,5 +1,6 @@
 # Rol de RecLineaCloud: consulta Base_Online + puntero de version en Control,
-# publica el mensaje de facturacion (SQS FIFO) y, en modo pdf_s3, escribe el PDF.
+# valida identidad (rol cross-account), publica el mensaje de facturacion (SQS
+# FIFO) y, en Lotes (modo pdf_s3), lee plantillas/ y escribe el PDF en output_raw/.
 data "aws_iam_policy_document" "lambda_reclineacloud" {
   source_policy_documents = [
     data.aws_iam_policy_document.lambda_base["reclineacloud"].json,
@@ -28,6 +29,34 @@ data "aws_iam_policy_document" "lambda_reclineacloud" {
     sid       = "SendFacturacion"
     actions   = ["sqs:SendMessage", "sqs:GetQueueAttributes", "sqs:GetQueueUrl"]
     resources = [local.arns.sqs_facturacion]
+  }
+
+  dynamic "statement" {
+    for_each = var.enable_lotes ? [1] : []
+    content {
+      sid       = "ReadPlantillasLotes"
+      actions   = ["s3:GetObject"]
+      resources = ["${local.arns.s3_lotes}/plantillas/*"]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.enable_lotes ? [1] : []
+    content {
+      sid       = "WritePdfLotes"
+      actions   = ["s3:PutObject"]
+      resources = ["${local.arns.s3_lotes}/output_raw/*"]
+    }
+  }
+
+  # Validacion de identidad: API de otra cuenta AWS, con su rol cross-account.
+  dynamic "statement" {
+    for_each = var.validacion_identidad_role_arn == "" ? [] : [1]
+    content {
+      sid       = "AssumeValidacionIdentidad"
+      actions   = ["sts:AssumeRole"]
+      resources = [var.validacion_identidad_role_arn]
+    }
   }
 
   dynamic "statement" {

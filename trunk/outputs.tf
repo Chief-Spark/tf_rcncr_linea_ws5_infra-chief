@@ -5,6 +5,11 @@ output "role_arns" {
     lambda_reclineacloud = module.lambda_reclineacloud_role.role_arn
     lambda_validation    = module.lambda_validation_role.role_arn
     lambda_facturacion   = module.lambda_facturacion_role.role_arn
+    lambda_parseo        = try(module.lambda_parseo_role[0].role_arn, null)
+    lambda_consolidar    = try(module.lambda_consolidar_role[0].role_arn, null)
+    sfn_lotes            = try(module.sfn_lotes_role[0].role_arn, null)
+    evb_lotes            = try(module.evb_lotes_role[0].role_arn, null)
+    portal_lotes         = try(module.portal_lotes_role[0].role_arn, null)
     glue_transform       = module.glue_transform_role.role_arn
     sfn_updrecmaster     = module.sfn_updrecmaster_role.role_arn
     evb_updrecmaster     = module.evb_updrecmaster_role.role_arn
@@ -62,4 +67,17 @@ output "api_id" {
 output "api_invoke_url" {
   description = "Private REST API stage invoke URL (null until enable_lambdas = true)"
   value       = try(aws_api_gateway_stage.this[0].invoke_url, null)
+}
+
+output "kms_key_arn" {
+  description = "CMK del stack (null sin CMK)"
+  value       = local.kms_key_arn
+}
+
+output "lotes" {
+  description = "Flujo de Lotes: bucket y Step Function (null con enable_lotes = false)"
+  value = var.enable_lotes ? {
+    bucket            = module.s3_lotes[0].s3_bucket_id
+    state_machine_arn = aws_sfn_state_machine.lotes[0].arn
+  } : null
 }

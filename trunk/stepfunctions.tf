@@ -39,7 +39,7 @@ locals {
       ],
       BillingMode = "PAY_PER_REQUEST"
     },
-    local.kms_key_arn != null ? {
+    local.kms_enabled ? {
       SSESpecification = { Enabled = true, SSEType = "KMS", KMSMasterKeyId = local.kms_key_arn }
     } : {}
   )

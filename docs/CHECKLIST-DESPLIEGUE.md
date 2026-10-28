@@ -73,13 +73,14 @@ Para actualizar despues de un build:
 | 13 | Rol UNLOAD Redshift Reconocer | `-redshift-unload` | `iam-redshift.tf` | 🟡 (6) | ⏳ | ⏳ | ⏳ |
 | 14 | Rol COPY Redshift Bureau | `-redshift-copy-xacct` (role chaining) | `iam-redshift.tf` | 🟡 (7) | ⏳ | ⏳ | ⏳ |
 | 15 | Rol CloudWatch del API | `-apigw-cloudwatch` (uno por cuenta) | `iam-apigw-cloudwatch.tf` | ✅ | ⏳ | ⏳ | ⏳ |
-| 16 | Lotes: bucket RecMasterLotes | `/input`, `/plantillas`, `/output_raw`, `/output_zip` | por definir | ⏳ (8) | ⏳ | ⏳ | ⏳ |
-| 17 | Lotes: EventBridge | Regla: archivo nuevo en `/input` → SFN Lotes | por definir | ⏳ (8) | ⏳ | ⏳ | ⏳ |
-| 18 | Lotes: SFN Lotes (Map State) | Parseo → RecLineaCloud por registro → Consolidar; estados en Metadata & Control | por definir | ⏳ (8) | ⏳ | ⏳ | ⏳ |
-| 19 | Lotes: Lambda Parseo archivos | | por definir | ⏳ (8) | ⏳ | ⏳ | ⏳ |
-| 20 | Lotes: Lambda Consolidar | | por definir | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 16 | Lotes: bucket RecMasterLotes | `-recmasterlotes-s3`: `input/`, `plantillas/`, `output_raw/`, `output_zip/` (30 dias) | `lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 17 | Lotes: EventBridge | `-lotes-event`: `.csv`/`.txt` nuevo en `input/<batch_id>/` → SFN Lotes | `lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 18 | Lotes: SFN Lotes | `-lotes-sfn`: Parseo → RecLineaCloud por registro (5 a la vez, 10 % tolerado) → Consolidar; estado en Metadata & Control | `lotes.tf`, `iam-lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 19 | Lotes: Lambda Parseo | `-lotes-parseo-lambda` (python3.13) | `lambda.tf`, `iam-lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 20 | Lotes: Lambda Consolidar | `-lotes-consolidar-lambda` (python3.13) | `lambda.tf`, `iam-lotes.tf` | ⏳ (8) | ⏳ | ⏳ | ⏳ |
+| 20b | Lotes: rol del Portal (on-premise) | `-portal-lotes`: sube a `input/`, lee el estado, descarga `output_zip/` | `iam-lotes.tf` | ⏳ (11) | ⏳ | ⏳ | ⏳ |
 | 21 | RecLineaCloud → Validacion de identidad Cloud (otra cuenta) | Permiso `sts:AssumeRole` al rol cross-account de esa cuenta | `iam-lambda-reclineacloud.tf` | ⏳ (9) | ⏳ | ⏳ | ⏳ |
-| 22 | CMK de KMS propia (S3, SQS, logs, Lambdas, tablas del Import) | Llave con `eits-tf-aws-kms` + `kms_key_arn` | por definir | ⏳ (10) | ⏳ | ⏳ | ⏳ |
+| 22 | CMK de KMS propia (S3, SQS, logs, Lambdas, tablas del Import) | `alias/<prefijo>-recmaster-kms` con `eits-tf-aws-kms` 1.10.5 | `kms.tf` | ⏳ (10) | ⏳ | ⏳ | ⏳ |
 
 Notas DEV:
 1. La cuenta Batch debe permitir en su bus `default` que la 147 le envie
@@ -96,14 +97,19 @@ Notas DEV:
 6. Falta asociar el rol al namespace del Redshift Reconocer.
 7. Falta crear el rol de Bureau en la cuenta Batch. Cuando exista, la confianza
    se cambia al ARN exacto del rol (se quita el aviso Wiz IAM-146).
-8. Flujo de Lotes (Cargue de archivos): dentro del alcance (2026-10-28).
-   Decidido: EventBridge arranca SFN Lotes; Parseo y Consolidar en Python;
-   archivos borrados a los 30 dias (menos `plantillas/`); Map de 5 a la vez,
-   2 reintentos. Falta: cuenta y rol del Portal.
-9. Falta el ARN del rol cross-account de la cuenta de Validacion de identidad.
-   Esa cuenta debe confiar en `BURoleFor-<prefijo>-lmbd-reclineacloud`.
-10. Decidido 2026-10-28: la CMK se crea en esta IaC. Falta la version de
-    `eits-tf-aws-kms`.
+8. Flujo de Lotes: en la rama, pendiente de desplegar. Contratos en
+   [SOLICITUD, seccion 3.6](SOLICITUD-REPOS-DESARROLLO.md#36-flujo-de-lotes).
+   Requiere que Metadata & Control tenga llave `pk` + `sk` (texto).
+9. En la rama (opcional). Falta el ARN del rol cross-account
+   (`validacion_identidad_role_arn`). Esa cuenta debe confiar en
+   `BURoleFor-<prefijo>-lmbd-reclineacloud`.
+10. En la rama (`create_kms_key = true`). Al desplegar, S3, SQS, logs y
+    Lambdas pasan a la CMK (cambio en sitio; los objetos ya guardados quedan
+    con su cifrado anterior). Riesgos: que el rol de Jenkins no pueda crear la
+    llave, o que no exista `BUAdministratorAccessRole` (la libreria la pone
+    como administradora).
+11. Opcional: se crea cuando Operacion entregue la identidad AWS del Portal
+    (`lotes_portal_principal_arns`).
 
 ---
 
@@ -133,6 +139,7 @@ La IaC crea las Lambdas con un placeholder. El codigo real lo publica cada repo.
 | `A_RCNCR_LN_VLDTN` | Validation (Python) | RITM5307368 | ⏳ | ⏳ | ⏳ | ⏳ |
 | `A_RCNCR_LN_RCMS_TRNSFRM` | Glue (script en `glue-scripts/`) | RITM5307372 | ⏳ | ⏳ | ⏳ | ⏳ |
 | Por pedir | Lambda Facturacion (Python) | — | ⏳ | ⏳ | ⏳ | ⏳ |
+| Por pedir | Lambdas Lotes Parseo y Consolidar (Python) | — | ⏳ | ⏳ | ⏳ | ⏳ |
 | UNLOAD Redshift Reconocer | SQL del UNLOAD y `7_tablas_finish.json` ([guia](GUIA-UNLOAD-Y-CARGA.md)) | — | ⏳ | ⏳ | ⏳ | ⏳ |
 
 (a) DevSecOps no tiene plantilla LAMBDA-JAVA. Esperando su respuesta.
