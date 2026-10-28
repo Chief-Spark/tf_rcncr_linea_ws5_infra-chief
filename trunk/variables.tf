@@ -110,7 +110,7 @@ variable "enable_lambdas" {
 
 variable "lambdas" {
   description = <<EOF
-  Ajustes por Lambda (claves: authorizer, reclineacloud, validation). Todo es opcional: lo omitido toma el
+  Ajustes por Lambda (claves: authorizer, reclineacloud, validation, facturacion). Todo es opcional: lo omitido toma el
   default de lambda.tf. runtime y handler deben coincidir con el codigo real que publica el repo de codigo:
   update-function-code solo cambia el codigo, la configuracion la mantiene este repo.
   EOF
@@ -125,8 +125,8 @@ variable "lambdas" {
   default = {}
 
   validation {
-    condition     = alltrue([for k in keys(var.lambdas) : contains(["authorizer", "reclineacloud", "validation"], k)])
-    error_message = "Las claves de var.lambdas deben ser authorizer, reclineacloud o validation."
+    condition     = alltrue([for k in keys(var.lambdas) : contains(["authorizer", "reclineacloud", "validation", "facturacion"], k)])
+    error_message = "Las claves de var.lambdas deben ser authorizer, reclineacloud, validation o facturacion."
   }
 }
 
@@ -158,15 +158,26 @@ variable "apigw_vpc_endpoint_ids" {
   default     = ["vpce-099b9bad5f18ee5a1"]
 }
 
-# --- Facturacion (la Lambda consumidora vive en otra cuenta) ---
-variable "facturacion_consumer_principal_arns" {
-  description = "ARNs de los roles (otra cuenta) que consumen la cola de facturacion. Vacio = sin acceso cross-account."
-  type        = list(string)
-  default     = []
+# --- Facturacion (Lambda de esta cuenta -> API de facturacion electronica) ---
+variable "facturacion_api_url" {
+  description = "URL del API Gateway de facturacion electronica (otra cuenta). Llega a la Lambda como FACTURACION_API_URL. Vacio = sin variable."
+  type        = string
+  default     = ""
+}
+
+variable "facturacion_api_execute_arn" {
+  description = "ARN execute-api del API de facturacion electronica, solo si ese API usa autenticacion IAM. Vacio = sin permiso execute-api:Invoke."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.facturacion_api_execute_arn == "" || can(regex("^arn:aws:execute-api:[a-z0-9-]+:[0-9]{12}:.+$", var.facturacion_api_execute_arn))
+    error_message = "facturacion_api_execute_arn debe ser un ARN execute-api (arn:aws:execute-api:<region>:<cuenta>:<api-id>/...)."
+  }
 }
 
 variable "facturacion_visibility_timeout_seconds" {
-  description = "Visibility timeout de la cola de facturacion (>= timeout de la Lambda consumidora)."
+  description = "Visibility timeout de la cola de facturacion (AWS recomienda >= 6 x timeout de la Lambda de Facturacion)."
   type        = number
   default     = 60
 }

@@ -50,10 +50,12 @@ enable_lambdas = true
 # Bucket de salida de PDFs de RecLineaCloud (modo pdf_s3). Vacio = sin permiso.
 reclinea_output_bucket = ""
 
-# --- Facturacion (consumidor en otra cuenta) ---
-# PENDIENTE: ARN del rol de la Lambda de facturacion en la otra cuenta. Vacio =
-# la cola se crea pero nadie de afuera la puede consumir todavia.
-facturacion_consumer_principal_arns = []
+# --- Facturacion ---
+# La Lambda de Facturacion (esta cuenta) lee la cola y llama al API de
+# facturacion electronica (otra cuenta). PENDIENTE: URL del API y, si usa
+# autenticacion IAM, su ARN execute-api. Vacio = la Lambda se crea igual.
+facturacion_api_url         = ""
+facturacion_api_execute_arn = ""
 
 # --- Triggers_reconocer ---
 # El rol redshift-unload se crea siempre; asociarlo al namespace del Redshift

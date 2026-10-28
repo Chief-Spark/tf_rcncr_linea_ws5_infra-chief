@@ -1,5 +1,5 @@
-# Facturacion: cola SQS FIFO + DLQ. La Lambda que la consume vive en otra cuenta;
-# aqui solo se le da acceso cross-account por queue policy.
+# Facturacion: cola SQS FIFO + DLQ. La consume la Lambda de Facturacion de esta
+# misma cuenta (lambda.tf); su permiso de lectura va en su rol.
 # (No hay libreria eits-tf-aws-sqs confirmada para este repo: recursos nativos.)
 resource "aws_sqs_queue" "facturacion_dlq" {
   name                      = local.names.sqs_facturacion_dlq
@@ -63,20 +63,6 @@ data "aws_iam_policy_document" "facturacion_queue" {
       principals {
         type        = "AWS"
         identifiers = [statement.value.role]
-      }
-    }
-  }
-
-  dynamic "statement" {
-    for_each = length(var.facturacion_consumer_principal_arns) > 0 ? [1] : []
-    content {
-      sid       = "AllowCrossAccountConsumer"
-      actions   = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:ChangeMessageVisibility", "sqs:GetQueueAttributes"]
-      resources = [aws_sqs_queue.facturacion.arn]
-
-      principals {
-        type        = "AWS"
-        identifiers = var.facturacion_consumer_principal_arns
       }
     }
   }

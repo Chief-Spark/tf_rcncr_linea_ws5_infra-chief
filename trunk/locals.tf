@@ -32,6 +32,7 @@ locals {
     lambda_authorizer    = "${local.name_prefix}-authorizer-lambda"
     lambda_reclineacloud = "${local.name_prefix}-reclineacloud-lambda"
     lambda_validation    = "${local.name_prefix}-validation-lambda"
+    lambda_facturacion   = "${local.name_prefix}-facturacion-lambda"
     glue_transform       = "${local.name_prefix}-recmas-transform-upload"
     glue_log_group       = "/aws-glue/jobs/${local.name_prefix}-recmaster"
     sfn_updrecmaster     = "${local.name_prefix}-upd-recmaster-sfn"
@@ -46,6 +47,7 @@ locals {
     authorizer    = local.names.lambda_authorizer
     reclineacloud = local.names.lambda_reclineacloud
     validation    = local.names.lambda_validation
+    facturacion   = local.names.lambda_facturacion
   }
 
   arns = {

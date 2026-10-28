@@ -32,7 +32,7 @@ Los archivos .tf dentro de estas carpetas provienen de trunk/ durante el pipelin
 Solo IaC: el codigo de Lambdas y Glue vive en otros repos y este repo **no sube
 archivos** (.py, .zip). **No** se despliegan aqui las tablas DynamoDB
 (Base_Online / Metadata & Control, se crean por otro proceso), la Lambda
-RecMicroservicios (existente) ni la Lambda de Facturacion (vive en otra cuenta):
+RecMicroservicios (existente) ni Orquesta-Facturacion (cuenta de facturacion electronica):
 solo se referencian por nombre o ARN (`dynamodb.tf`, `existing.tf`). Todos esos
 valores son opcionales: si estan vacios se omite el permiso o la ruta asociada.
 
@@ -41,8 +41,8 @@ valores son opcionales: si estan vacios se omite el permiso o la ruta asociada.
 | Archivo | Componente | Libreria |
 |---|---|---|
 | `s3.tf` | Buckets Triggers_reconocer (notifica a EventBridge) y Upload_Staging | `eits-tf-aws-s3` 2.19.2 |
-| `sqs.tf` | SQS FIFO de facturacion + DLQ (consumidor cross-account) | nativo |
-| `lambda.tf` | Lambdas Authorizer, RecLineaCloud y Validation | `eits-tf-aws-lambda` 1.11.2 |
+| `sqs.tf` | SQS FIFO de facturacion + DLQ (la lee la Lambda de Facturacion, `lambda.tf`) | nativo |
+| `lambda.tf` | Lambdas Authorizer, RecLineaCloud, Validation y Facturacion | `eits-tf-aws-lambda` 1.11.2 |
 | `apigateway.tf` | API REST privado: Int -> RecLineaCloud, Ext -> RecMicroservicios | nativo (ver nota) |
 | `glue.tf` | Glue Job RecMas_Transform_and_Upload | `eits-tf-aws-glue` 1.5.1 |
 | `stepfunctions.tf` | Step Function Update RecMaster (Distributed Map) | nativo |

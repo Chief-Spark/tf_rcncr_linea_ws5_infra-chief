@@ -11,12 +11,14 @@ locals {
     authorizer    = module.lambda_authorizer_role.role_arn
     reclineacloud = module.lambda_reclineacloud_role.role_arn
     validation    = module.lambda_validation_role.role_arn
+    facturacion   = module.lambda_facturacion_role.role_arn
   }
 
   lambda_descriptions = {
     authorizer    = "Lambda Authorizer (Okta JWT) del API Reconocer Linea"
     reclineacloud = "RecLineaCloud: consumo en linea de Reconocer Master"
     validation    = "Validacion de integridad de la carga de Base_Online"
+    facturacion   = "Facturacion: lee la cola SQS y envia al API de facturacion electronica"
   }
 
   # Defaults por Lambda (sobreescribibles en var.lambdas). Runtimes segun el HLD:
@@ -44,6 +46,15 @@ locals {
       timeout                        = 300
       reserved_concurrent_executions = 7
     }
+    # Un mensaje por invocacion (batch 1). timeout x 6 <= visibility timeout de la
+    # cola (60 s), como recomienda AWS para Lambdas que leen SQS.
+    facturacion = {
+      runtime                        = "python3.13"
+      handler                        = "handler.lambda_handler"
+      memory_size                    = 256
+      timeout                        = 10
+      reserved_concurrent_executions = 5
+    }
   }
 
   lambda_config = {
@@ -67,6 +78,7 @@ locals {
       BUCKET_STAGING  = module.s3_staging.s3_bucket_id
       BUCKET_TRIGGERS = module.s3_triggers.s3_bucket_id
     })
+    facturacion = var.facturacion_api_url != "" ? { FACTURACION_API_URL = var.facturacion_api_url } : {}
   }
 }
 
@@ -96,4 +108,15 @@ module "lambda" {
   cloudwatch_logs_kms_key_arn       = local.kms_key_arn
 
   tags = local.default_tags
+}
+
+# La cola de facturacion dispara la Lambda de Facturacion, un mensaje a la vez.
+# Si falla maxReceiveCount veces, el mensaje pasa a la DLQ.
+resource "aws_lambda_event_source_mapping" "facturacion" {
+  count = var.enable_lambdas ? 1 : 0
+
+  event_source_arn = aws_sqs_queue.facturacion.arn
+  function_name    = module.lambda["facturacion"].arn
+  batch_size       = 1
+  enabled          = true
 }

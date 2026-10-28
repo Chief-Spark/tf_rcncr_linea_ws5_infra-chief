@@ -47,13 +47,13 @@
 | 7 | EventBridge Update | Regla `dev-647096294147-rcncr-ws5-upd-recmaster-event` | `eventbridge.tf` | `BURoleFor-dev-647096294147-rcncr-ws5-evb-updrecmaster` | Solo IaC (este repo) | — |
 | 8 | S3 Triggers_reconocer | Bucket `dev-647096294147-rcncr-ws5-triggers-reconocer-s3` | `s3.tf` | — | Solo IaC (este repo) | — |
 | 9 | S3 Upload_Staging | Bucket `dev-647096294147-rcncr-ws5-upload-staging-s3` | `s3.tf` | — | Solo IaC (este repo) | — |
-| 10 | Facturacion | SQS `dev-647096294147-rcncr-ws5-facturacion.fifo` + DLQ `...-facturacion-dlq.fifo` | `sqs.tf` | — (consumidor en otra cuenta) | Solo IaC (este repo) | — |
+| 10 | Facturacion | SQS `dev-647096294147-rcncr-ws5-facturacion.fifo` + DLQ `...-facturacion-dlq.fifo`; Lambda `dev-647096294147-rcncr-ws5-facturacion-lambda` (python3.13, *en la rama, pendiente de desplegar*) | `sqs.tf`, `lambda.tf` | `BURoleFor-dev-647096294147-rcncr-ws5-lmbd-facturacion` | Por definir (repo de desarrollo pendiente) | — |
 | 11 | Redshift UNLOAD / COPY | Roles `BURoleFor-dev-647096294147-rcncr-ws5-redshift-unload` y `-redshift-copy-xacct` (pendiente ARN Bureau) | `iam-redshift.tf` | — | Solo IaC (este repo) | — |
 | 12 | Catalogo Glue | Database `dev-647096294147-rcncr-ws5-recmaster-glue` | `glue.tf` | — | Solo IaC (este repo) | — |
 
 Fuera de alcance de este repo (no se despliegan aqui): tablas DynamoDB
-(Base_Online, Metadata & Control), Lambda RecMicroservicios (existente) y Lambda
-de Facturacion (otra cuenta).
+(Base_Online, Metadata & Control), Lambda RecMicroservicios (existente) y
+Orquesta-Facturacion (cuenta de facturacion electronica).
 
 Los componentes "Solo IaC" no tienen codigo propio: cualquier cambio (rutas del
 API, definicion de la Step Function, patron del evento, politicas) se pide con
@@ -625,3 +625,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-28 | Build de la correccion (commit `SLCOPRBA-1526 Corrige triggers...`): SUCCESS. Plan 1 add, 1 change, 2 destroy: deployment nuevo `yyhd67`, stage `dev` apuntando a el, borrados el deployment viejo `zu5lcx` y el authorizer. **IaC de la cuenta 147 desplegada completa.** Wiz: PASSED_BY_POLICY. Jenkins no pudo comentar en Jira (sin permiso en la subtarea), no afecta el despliegue. |
 | 2026-10-28 | Creado el checklist central por ambiente `docs/CHECKLIST-DESPLIEGUE.md` (DEV, QA, DEMO, PDN). |
 | 2026-10-28 | Pausa / encendido del Redshift Reconocer: se hace por otro medio, no en la IaC ni en la Step Function Upload. No se crea rol. |
+| 2026-10-28 | La Lambda de Facturacion es de la 147 y de esta IaC (antes se suponia en otra cuenta). En la rama: Lambda Python, rol `lmbd-facturacion`, disparo desde la cola (1 mensaje por vez); se quita el permiso a consumidores de otra cuenta. Pendiente de desplegar. |

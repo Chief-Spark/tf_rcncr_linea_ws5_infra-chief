@@ -68,7 +68,8 @@ Para actualizar despues de un build:
 | 9 | Lambda Authorizer | `-authorizer-lambda` (python3.13) | `lambda.tf` | ✅ | ⏳ | ⏳ | ⏳ |
 | 10 | API Int (Portal) | API PRIVATE, `GET /v1/sujetos/{tipo}/{numero}/reporte/{perfil}` | `apigateway.tf` | ✅ | ⏳ | ⏳ | ⏳ |
 | 11 | API Ext (Apigee) | `POST /v1/microservicios/{operacion}` + authorizer Okta | `apigateway.tf` | ⏳ (4) | ⏳ | ⏳ | ⏳ |
-| 12 | SQS Facturacion | `-facturacion.fifo` + DLQ | `sqs.tf` | 🟡 (5) | ⏳ | ⏳ | ⏳ |
+| 12 | SQS Facturacion | `-facturacion.fifo` + DLQ | `sqs.tf` | ✅ | ⏳ | ⏳ | ⏳ |
+| 12b | Lambda Facturacion | `-facturacion-lambda` (python3.13), la dispara la cola (1 mensaje por vez) | `lambda.tf`, `iam-lambda-facturacion.tf` | ⏳ (5) | ⏳ | ⏳ | ⏳ |
 | 13 | Rol UNLOAD Redshift Reconocer | `-redshift-unload` | `iam-redshift.tf` | 🟡 (6) | ⏳ | ⏳ | ⏳ |
 | 14 | Rol COPY Redshift Bureau | `-redshift-copy-xacct` (role chaining) | `iam-redshift.tf` | 🟡 (7) | ⏳ | ⏳ | ⏳ |
 | 15 | Rol CloudWatch del API | `-apigw-cloudwatch` (uno por cuenta) | `iam-apigw-cloudwatch.tf` | ✅ | ⏳ | ⏳ | ⏳ |
@@ -82,8 +83,9 @@ Notas DEV:
    (DevSecOps).
 4. Se activa cuando se defina `recmicroservicios_function_name`. Al activarlo se
    crea tambien el authorizer.
-5. Falta el ARN del rol de la Lambda de Facturacion (otra cuenta):
-   `facturacion_consumer_principal_arns`.
+5. En la rama, pendiente de desplegar. Falta la URL del API de facturacion
+   electronica (`facturacion_api_url`) y saber si ese API usa autenticacion IAM
+   (`facturacion_api_execute_arn`). La Lambda se crea igual sin esos datos.
 6. Falta asociar el rol al namespace del Redshift Reconocer.
 7. Falta crear el rol de Bureau en la cuenta Batch. Cuando exista, la confianza
    se cambia al ARN exacto del rol (se quita el aviso Wiz IAM-146).
@@ -115,6 +117,7 @@ La IaC crea las Lambdas con un placeholder. El codigo real lo publica cada repo.
 | `A_RCNCR_LN_ATHRZR` | Lambda Authorizer (Python) | RITM5307364 | ⏳ | ⏳ | ⏳ | ⏳ |
 | `A_RCNCR_LN_VLDTN` | Validation (Python) | RITM5307368 | ⏳ | ⏳ | ⏳ | ⏳ |
 | `A_RCNCR_LN_RCMS_TRNSFRM` | Glue (script en `glue-scripts/`) | RITM5307372 | ⏳ | ⏳ | ⏳ | ⏳ |
+| Por pedir | Lambda Facturacion (Python) | — | ⏳ | ⏳ | ⏳ | ⏳ |
 | UNLOAD Redshift Reconocer | SQL del UNLOAD y `7_tablas_finish.json` ([guia](GUIA-UNLOAD-Y-CARGA.md)) | — | ⏳ | ⏳ | ⏳ | ⏳ |
 
 (a) DevSecOps no tiene plantilla LAMBDA-JAVA. Esperando su respuesta.
@@ -128,7 +131,7 @@ La IaC crea las Lambdas con un placeholder. El codigo real lo publica cada repo.
 | 1 | Tabla DynamoDB Metadata & Control (`reconocer_metadata_control`) | Proceso externo de DynamoDB | ⏳ | ⏳ | ⏳ | ⏳ |
 | 2 | Confirmar boundary: ImportTable / TagResource / DeleteTable | CE | ⏳ | ⏳ | ⏳ | ⏳ |
 | 3 | Asociar rol `redshift-unload` al Redshift Reconocer | Admin del Redshift | ⏳ | ⏳ | ⏳ | ⏳ |
-| 4 | ARN del rol consumidor de Facturacion | Equipo de Facturacion | ⏳ | ⏳ | ⏳ | ⏳ |
+| 4 | URL y tipo de autenticacion del API de facturacion electronica | Equipo de Facturacion | ⏳ | ⏳ | ⏳ | ⏳ |
 | 5 | Nombre de la Lambda RecMicroservicios (API Ext) | Dueno de RecMicroservicios | ⏳ | ⏳ | ⏳ | ⏳ |
 | 6 | Lectura de `reconocer_master_*` para el rol de RecMicroservicios | Dueno de RecMicroservicios | ⏳ | ⏳ | ⏳ | ⏳ |
 | 7 | Variables de Okta (issuer, audience) para el Authorizer | Desarrollo | ⏳ | ⏳ | ⏳ | ⏳ |
@@ -149,7 +152,7 @@ Solo se referencian. No llevan marca por ambiente.
 - Redshift Reconocer (cuenta Reconocer, provisionado).
 - Redshift Bureau (cuenta Batch, no se puede pausar).
 - Lambda RecMicroservicios.
-- Lambda de Facturacion (otra cuenta).
+- Orquesta-Facturacion y su API Gateway (cuenta de facturacion electronica).
 - Tablas DynamoDB `reconocer_master_*`: las crea la Step Function en cada FULL.
 - Fuera de alcance: ECR `/ContactDataStdr`.
 

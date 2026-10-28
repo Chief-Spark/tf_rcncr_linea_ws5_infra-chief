@@ -4,6 +4,7 @@ output "role_arns" {
     lambda_authorizer    = module.lambda_authorizer_role.role_arn
     lambda_reclineacloud = module.lambda_reclineacloud_role.role_arn
     lambda_validation    = module.lambda_validation_role.role_arn
+    lambda_facturacion   = module.lambda_facturacion_role.role_arn
     glue_transform       = module.glue_transform_role.role_arn
     sfn_updrecmaster     = module.sfn_updrecmaster_role.role_arn
     evb_updrecmaster     = module.evb_updrecmaster_role.role_arn
