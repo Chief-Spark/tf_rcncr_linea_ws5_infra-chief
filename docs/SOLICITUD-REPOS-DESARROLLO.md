@@ -621,3 +621,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-27 | Radicado el repo de IaC de la cuenta Batch `TF_RCNCR_LINEA_WS5_BTCH_INFRA`: RITM5324186. |
 | 2026-10-27 | Subtarea de despliegue en la 147: SLCOPRBA-1526, rama Bitbucket `feature/SLCOPRBA-1526-desplegar-la-iac-en-develop-cuenta-147`. |
 | 2026-10-28 | HU SLCOPRBA-1525 (IaC Reconocer Linea cuenta 147: FULL/DELTA, CTL final y reenvio a cuenta Batch). Commit `3c94bee9aad` en Bitbucket, enlazado a su subtarea SLCOPRBA-1526. |
+| 2026-10-28 | Build 74994: plan correcto (11 add, 10 change, 5 destroy). Apply aplico casi todo (Step Function FULL/DELTA, reglas EventBridge, roles nuevos, permisos, variables) y fallo solo en el deployment del API ("Provider produced inconsistent final plan" por el hash de `triggers`). Corregido: el hash usa solo atributos de configuracion. |

@@ -246,16 +246,19 @@ resource "aws_api_gateway_deployment" "this" {
   rest_api_id = aws_api_gateway_rest_api.this[0].id
 
   # Redeploy cuando cambian rutas, metodos, integraciones o el authorizer.
+  # Solo atributos de configuracion: con el objeto completo, el provider
+  # recalcula atributos durante el apply y el hash cambia entre plan y apply
+  # ("Provider produced inconsistent final plan", build 74994).
   triggers = {
     redeployment = sha1(jsonencode([
-      aws_api_gateway_resource.perfil,
-      aws_api_gateway_method.reclinea,
-      aws_api_gateway_integration.reclinea,
-      aws_api_gateway_resource.operacion,
-      aws_api_gateway_method.microservicios,
-      aws_api_gateway_integration.microservicios,
-      aws_api_gateway_authorizer.okta,
-      aws_api_gateway_rest_api_policy.this,
+      aws_api_gateway_resource.perfil[*].id,
+      [for m in aws_api_gateway_method.reclinea : [m.id, m.authorization, m.request_parameters]],
+      [for i in aws_api_gateway_integration.reclinea : [i.id, i.type, i.uri]],
+      aws_api_gateway_resource.operacion[*].id,
+      [for m in aws_api_gateway_method.microservicios : [m.id, m.authorization, m.request_parameters]],
+      [for i in aws_api_gateway_integration.microservicios : [i.id, i.type, i.uri]],
+      [for a in aws_api_gateway_authorizer.okta : [a.id, a.type, a.authorizer_uri, a.identity_source]],
+      aws_api_gateway_rest_api_policy.this[*].policy,
     ]))
   }
 
