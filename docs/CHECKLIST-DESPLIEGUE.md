@@ -140,7 +140,9 @@ La IaC crea las Lambdas con un placeholder. El codigo real lo publica cada repo.
 | `A_RCNCR_LN_RCMS_TRNSFRM` | Glue (script en `glue-scripts/`) | RITM5307372 | ⏳ | ⏳ | ⏳ | ⏳ |
 | Por pedir | Lambda Facturacion (Python) | — | ⏳ | ⏳ | ⏳ | ⏳ |
 | Por pedir | Lambdas Lotes Parseo y Consolidar (Python) | — | ⏳ | ⏳ | ⏳ | ⏳ |
-| UNLOAD Redshift Reconocer | SQL del UNLOAD y `7_tablas_finish.json` ([guia](GUIA-UNLOAD-Y-CARGA.md)) | — | ⏳ | ⏳ | ⏳ | ⏳ |
+| `A_RCNCR_LN_RDSHFT_STRCT` | Redshift estructuras (DDL): esquemas, tablas y tablas de staging ([guia](GUIA-UNLOAD-Y-CARGA.md)) | Por radicar | ⏳ | ⏳ | ⏳ | ⏳ |
+| `A_RCNCR_LN_RDSHFT_PGM` | Redshift programas: stored procedures del UNLOAD (Reconocer) y del COPY / MERGE (Bureau) ([guia](GUIA-UNLOAD-Y-CARGA.md)) | Por radicar | ⏳ | ⏳ | ⏳ | ⏳ |
+| `A_RCNCR_LN_RDSHFT_DT` | Redshift datos (DML): parametros, catalogos y cargas iniciales ([guia](GUIA-UNLOAD-Y-CARGA.md)) | Por radicar | ⏳ | ⏳ | ⏳ | ⏳ |
 
 (a) El repo ya se corrigio a Python (antes LAMBDA-JAVA).
 
