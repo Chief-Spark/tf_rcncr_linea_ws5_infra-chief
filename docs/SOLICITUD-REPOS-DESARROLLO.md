@@ -205,9 +205,9 @@ en [7.2](#72-lo-que-ya-esta-definido) y en la
 Los 4 repos estan creados en el proyecto `COAWSPPR` de Bitbucket.
 
 | 5 | `TF_RCNCR_LINEA_WS5_BTCH_INFRA` | IaC de la cuenta Batch (651706752126) | TERRAFORM – TERRAFORM | RITM5324186 | Radicado (2026-10-27) ([Ticket 5](#ticket-5--iac-cuenta-batch-ritm5324186)) |
-| 6 | `A_RCNCR_LN_RDSHFT_STRCT` | Redshift: estructuras (DDL): esquemas, tablas y tablas de staging | DATABASE – REDSHIFT | Por radicar | [Ticket 6](#ticket-6--redshift-strct) |
-| 7 | `A_RCNCR_LN_RDSHFT_PGM` | Redshift: programas: stored procedures del UNLOAD (Reconocer) y del COPY / MERGE (Bureau) | DATABASE – REDSHIFT | Por radicar | [Ticket 7](#ticket-7--redshift-pgm) |
-| 8 | `A_RCNCR_LN_RDSHFT_DT` | Redshift: datos (DML): parametros, catalogos y cargas iniciales | DATABASE – REDSHIFT | Por radicar | [Ticket 8](#ticket-8--redshift-dt) |
+| 6 | `A_RCNCR_LN_RDSHFT_STRCT` | Redshift: estructuras (DDL): esquemas, tablas y tablas de staging | DATABASE – REDSHIFT | RITM5340235 | Radicado (2026-11-04) ([Ticket 6](#ticket-6--redshift-strct-ritm5340235) |
+| 7 | `A_RCNCR_LN_RDSHFT_PGM` | Redshift: programas: stored procedures del UNLOAD (Reconocer) y del COPY / MERGE (Bureau) | DATABASE – REDSHIFT | RITM5340235 | Radicado (2026-11-04) ([Ticket 7](#ticket-7--redshift-pgm-ritm5340235) |
+| 8 | `A_RCNCR_LN_RDSHFT_DT` | Redshift: datos (DML): parametros, catalogos y cargas iniciales | DATABASE – REDSHIFT | RITM5340235 | Radicado (2026-11-04) ([Ticket 8](#ticket-8--redshift-dt-ritm5340235) |
 
 ---
 
@@ -357,7 +357,7 @@ Gracias
 Alternativa sin ticket: el repo batch existente `TF_RCNCR_WS5_INFRA` ya despliega
 en la cuenta 651706752126 y podria alojar estas piezas.
 
-### Ticket 6 — Redshift STRCT
+### Ticket 6 — Redshift STRCT (RITM5340235)
 
 ```
 Buenos dias, solicito la creacion del siguiente repositorio en Bitbucket:
@@ -375,7 +375,7 @@ Repositorio para desplegar en AWS Redshift estructuras (DDL): esquemas, tablas y
 Gracias
 ```
 
-### Ticket 7 — Redshift PGM
+### Ticket 7 — Redshift PGM (RITM5340235)
 
 ```
 Buenos dias, solicito la creacion del siguiente repositorio en Bitbucket:
@@ -393,7 +393,7 @@ Repositorio para desplegar en AWS Redshift programas: stored procedures del UNLO
 Gracias
 ```
 
-### Ticket 8 — Redshift DT
+### Ticket 8 — Redshift DT (RITM5340235)
 
 ```
 Buenos dias, solicito la creacion del siguiente repositorio en Bitbucket:
@@ -732,3 +732,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-10-28 | Build SUCCESS: RecLineaCloud en Python y `AppID = 8519` desplegados en DEV (1 add, 75 change, 1 destroy). El "destroy" fue el deployment viejo del API (`yyhd67`), reemplazado por `oxqeon` con el mismo contenido; el stage `dev` no se cayo. |
 | 2026-10-28 | `.jenkins.yml`: `application` pasa de `29197` a `reconocer-linea-ws5-infra` (pedido en la revision del PR a `qa`). El proyecto Sonar sigue en 29197 hasta que DevSecOps confirme el del 8519. |
 | 2026-11-04 | Tres repos Redshift (DATABASE – REDSHIFT) para el UNLOAD y el COPY: `A_RCNCR_LN_RDSHFT_STRCT` (estructuras), `A_RCNCR_LN_RDSHFT_PGM` (programas) y `A_RCNCR_LN_RDSHFT_DT` (datos). Por radicar (tickets 6 a 8). |
+| 2026-11-04 | Radicados los 3 repos Redshift (`A_RCNCR_LN_RDSHFT_STRCT`, `_PGM`, `_DT`): ticket RITM5340235. |
