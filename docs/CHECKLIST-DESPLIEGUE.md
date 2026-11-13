@@ -48,7 +48,7 @@ Para actualizar despues de un build:
 | State (`backend.tf` del ambiente) | `dto-terraform-647096294147` | `dto-terraform-667397050561` | `dto-terraform-453645298399` | `dto-terraform-696708350333` |
 | Jenkins (`.jenkins.yml`) | ✅ | ✅ | ✅ | ✅ |
 | `terraform.tfvars` | ✅ | ✅ | ✅ | ✅ |
-| Ultimo build OK | 2026-10-28 (SLCOPRBA-1526) | — | — | — |
+| Ultimo build OK | 2026-11-13, 76524 (SLCOPRBA-1526) | — | — | — |
 
 ---
 
@@ -165,7 +165,7 @@ La IaC crea las Lambdas con un placeholder. El codigo real lo publica cada repo.
 | 9 | Permiso de `devsecops-sa-jenkins` para comentar en Jira (no bloquea) | Admin Jira | ⏳ | ⏳ | ⏳ | ⏳ |
 | 10 | Permiso de los pipelines de los 4 repos para publicar codigo (`lambda:UpdateFunctionCode`, `s3:PutObject` en `glue-scripts/`) | DevSecOps | ⏳ | ⏳ | ⏳ | ⏳ |
 | 11 | Validar con desarrollo el contrato de la Validation ([seccion 3.3](SOLICITUD-REPOS-DESARROLLO.md#33-a_rcncr_ln_vldtn--validation-python)) | Desarrollo | ⏳ | ⏳ | ⏳ | ⏳ |
-| 12 | Re-ejecutar el build y ver "No changes" (confirma que la IaC quedo estable) | IaC | ⏳ | ⏳ | ⏳ | ⏳ |
+| 12 | Re-ejecutar el build y ver "No changes" (confirma que la IaC quedo estable) | IaC | ✅ (76524) | ⏳ | ⏳ | ⏳ |
 | 13 | CMK de KMS: ver fila 22 de la seccion 3 | IaC | ➖ | ➖ | ➖ | ➖ |
 | 14 | SnapStart para RecLineaCloud: no aplica, ya no es Java | IaC | ➖ | ➖ | ➖ | ➖ |
 | 15 | AppID: corregir Sonar y Checkmarx de los repos (tickets 1 a 5) de 29197 (Procesos Especiales Batch) a 8519 (Reconocer Linea) | DevSecOps | ⏳ | ⏳ | ⏳ | ⏳ |
@@ -205,6 +205,7 @@ Solo se referencian. No llevan marca por ambiente.
 | 2026-10-28 | 75087 | SLCOPRBA-1526 | ❌ sin cambios | Plan correcto (2 add, 5 change, 0 destroy) pero fallo en el `plan` por el agente de Jenkins: una lectura quedo colgada 15 min y AWS rechazo la siguiente por `RequestTimeTooSkewed`. No se aplico nada; se relanza el build sin cambios |
 | 2026-10-28 | por confirmar (relanzamiento del 75087) | SLCOPRBA-1526 | ✅ | Plan 2 add, 5 change, 0 destroy. Creados: regla EventBridge `-lotes-event` y su destino a la SFN Lotes. Actualizados: SFN Lotes (ARN correctos de Parseo/Consolidar), SFN Update (`SseSpecification` con la CMK) y las policies de Parseo, Consolidar y SFN Lotes. Wiz: PASSED_BY_POLICY. **CMK, Lotes y Facturacion desplegados en DEV** |
 | 2026-10-28 | por confirmar | SLCOPRBA-1526 | ✅ | Plan 1 add, 80 change, 1 destroy (aplicado: 1 add, 75 change, 1 destroy). RecLineaCloud pasa a `python3.13` / `handler.lambda_handler`; tag `AppID` 29197 → 8519 en todos los recursos y en las tablas que etiqueta la SFN Update. El API se re-desplego (`yyhd67` → `oxqeon`, mismo contenido) porque el cambio de tags del API dejo la policy "known after apply" en el hash del deployment. Wiz: mismos avisos de siempre |
+| 2026-11-13 | 76524 | SLCOPRBA-1526 | ✅ sin cambios | **No changes** (0 add, 0 change, 0 destroy). Primer build con `backend.tf` en `develop/` (antes en trunk/): leyo el mismo state sin migrar. Confirma que DEV quedo estable. Wiz: PASSED_BY_POLICY |
 
 ### QA
 

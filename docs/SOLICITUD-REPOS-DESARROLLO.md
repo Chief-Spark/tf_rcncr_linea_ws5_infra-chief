@@ -734,3 +734,4 @@ Reconocer). Hallazgos que afectan la carga:
 | 2026-11-04 | Tres repos Redshift (DATABASE – REDSHIFT) para el UNLOAD y el COPY: `A_RCNCR_LN_RDSHFT_STRCT` (estructuras), `A_RCNCR_LN_RDSHFT_PGM` (programas) y `A_RCNCR_LN_RDSHFT_DT` (datos). Por radicar (tickets 6 a 8). |
 | 2026-11-04 | Radicados los 3 repos Redshift (`A_RCNCR_LN_RDSHFT_STRCT`, `_PGM`, `_DT`): ticket RITM5340235. |
 | 2026-11-13 | QA, DEMO y PDN listos para desplegar (datos tomados del repo de GEO `tf_rcncr_ws5_infra`): cuentas Reconocer 667397050561 / 453645298399 / 696708350333, cuentas Batch 124355679563 / 311141534073 / 324037294240, stage en nombres qa / stg / pro. `backend.tf` sale de trunk/ y pasa a cada ambiente (DEV conserva bucket y key). Build QA 19813 fallo en Sonar por la plantilla; corregido. |
+| 2026-11-13 | Build DEV 76524: **No changes**. El `backend.tf` por ambiente no movio el state de DEV. Listo para el PR a `qa`. |
