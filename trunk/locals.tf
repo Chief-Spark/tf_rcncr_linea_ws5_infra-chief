@@ -1,9 +1,11 @@
 locals {
+  # Stage de la convencion de nombres de cada cuenta (como los clusters
+  # eec-aws-us-eits-reconocerbatch-<stage>-redshift y el repo de GEO).
   env_prefix = {
     develop    = "dev"
     qa         = "qa"
-    demo       = "demo"
-    production = "prod"
+    demo       = "stg"
+    production = "pro"
   }
 
   # Valores del tag Environment que aceptan las librerias eits-tf-aws-*
@@ -11,7 +13,7 @@ locals {
   env_tag = {
     develop    = "dev"
     qa         = "tst"
-    demo       = "uat"
+    demo       = "stg"
     production = "prd"
   }
 

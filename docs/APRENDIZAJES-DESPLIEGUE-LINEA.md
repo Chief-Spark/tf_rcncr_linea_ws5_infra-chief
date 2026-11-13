@@ -12,7 +12,7 @@
 | Build | Resultado | Causa | Solucion |
 |---|---|---|---|
 | 74278 | ❌ precondition | La libreria api-gateway espera el rol `BURoleForAPIGatewayCloudwatchGlobal`, que no existe en la cuenta | Rol propio `BURoleFor-dev-647096294147-rcncr-ws5-apigw-cloudwatch` (`iam-apigw-cloudwatch.tf`) |
-| 74278 | ⚠️ warnings | Tag `Environment = develop` no es valido para las librerias | Mapa `env_tag` en `locals.tf` (develop=dev, qa=tst, demo=uat, production=prd) |
+| 74278 | ⚠️ warnings | Tag `Environment = develop` no es valido para las librerias | Mapa `env_tag` en `locals.tf` (develop=dev, qa=tst, demo=stg, production=prd; demo era uat hasta el 2026-11-13) |
 | 74279 | ❌ `iam:TagRole` explicit deny | Una SCP niega etiquetar roles con `eec:SourceIPException` | Sin ese tag; los buckets usan `disable_source_ip_check = true` |
 | 74280 | ❌ `apigateway:PUT /restapis/{id}` AccessDenied | El rol de Jenkins solo crea/modifica APIs **PRIVATE** y la importacion OpenAPI de la libreria no llega como PRIVATE | API con recursos nativos (`apigateway.tf`) + bloques `moved` |
 | 74281 | ✅ 17 add, 1 change, 1 destroy | — | API `bg2kuoleug` creado, el API a medio crear `f5n3zwmioc` eliminado |

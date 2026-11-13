@@ -7,14 +7,14 @@ Este repositorio organiza la infraestructura por ambientes y separa el codigo co
 ### trunk/
 Archivos Terraform compartidos entre todos los ambientes. Versiona aqui los recursos comunes, por ejemplo:
 - Archivos .tf de Lambdas, policies IAM, buckets S3 y modulos reutilizables
-- Archivos base como provider.tf, backend.tf y variables.tf
+- Archivos base como provider.tf y variables.tf (backend.tf NO: va en cada ambiente)
 
 Antes de cada despliegue, el pipeline copia el contenido de trunk/ hacia la carpeta del ambiente correspondiente.
 
 ### develop/, qa/, demo/, production/
 Cada carpeta representa un ambiente de despliegue. Manten en cada una el archivo terraform.tfvars con los valores de las variables de ese ambiente (account_id, region, tags, nombres de recursos, etc.).
 
-Los archivos .tf dentro de estas carpetas provienen de trunk/ durante el pipeline. Evita editarlos directamente en la carpeta del ambiente; realiza los cambios en trunk/.
+Los archivos .tf dentro de estas carpetas provienen de trunk/ durante el pipeline. Evita editarlos directamente en la carpeta del ambiente; realiza los cambios en trunk/. Unica excepcion: `backend.tf`, que es propio de cada ambiente (state en la cuenta del ambiente).
 
 ## Flujo de trabajo
 
@@ -77,7 +77,22 @@ cuenta, un stage) con recursos nativos y las rutas anidadas del HLD.
 ### Tag Environment
 Las librerias solo aceptan `dev, prd, sbx, stg, tst, uat` (api-gateway usa `prd`
 para elegir los VPC endpoints de produccion). `locals.tf` mapea: develop=dev,
-qa=tst, demo=uat, production=prd.
+qa=tst, demo=stg, production=prd.
+
+### Ambientes y cuentas
+Misma convencion que los clusters `eec-aws-us-eits-reconocerbatch-<stage>-redshift`
+y el repo de GEO (`tf_rcncr_ws5_infra`).
+
+| Ambiente | Cuenta Reconocer | Stage en nombres | Tag `Environment` | Cuenta Batch | State |
+|---|---|---|---|---|---|
+| develop | 647096294147 | dev | dev | 651706752126 | `dto-terraform-647096294147` |
+| qa | 667397050561 | qa | tst | 124355679563 | `dto-terraform-667397050561` |
+| demo | 453645298399 | stg | stg | 311141534073 | `dto-terraform-453645298399` |
+| production | 696708350333 | pro | prd | 324037294240 | `dto-terraform-696708350333` |
+
+`backend.tf` vive en cada carpeta de ambiente (key `rcncr-linea-ws5/terraform.tfstate`):
+el pipeline copia `trunk/*` a la carpeta y un `backend.tf` en trunk/ pisaria el
+del ambiente.
 
 ### Codigo de las Lambdas (placeholder)
 Las Lambdas se crean con `trunk/placeholder/lambda-placeholder.zip` (ver su README)

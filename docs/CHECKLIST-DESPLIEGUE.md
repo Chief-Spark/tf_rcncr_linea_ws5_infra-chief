@@ -41,11 +41,13 @@ Para actualizar despues de un build:
 | | DEV | QA | DEMO | PDN |
 |---|---|---|---|---|
 | Carpeta en el repo | `develop/` | `qa/` | `demo/` | `production/` |
-| Prefijo de nombres | `dev-<cuenta>-rcncr-ws5` | `qa-<cuenta>-rcncr-ws5` | `demo-<cuenta>-rcncr-ws5` | `prod-<cuenta>-rcncr-ws5` |
-| Tag `Environment` | `dev` | `tst` | `uat` | `prd` |
-| Cuenta Reconocer | `647096294147` | por definir | por definir | por definir |
-| Cuenta Batch | `651706752126` | por definir | por definir | por definir |
-| `terraform.tfvars` | ✅ | ⏳ | ⏳ | ⏳ |
+| Prefijo de nombres | `dev-<cuenta>-rcncr-ws5` | `qa-<cuenta>-rcncr-ws5` | `stg-<cuenta>-rcncr-ws5` | `pro-<cuenta>-rcncr-ws5` |
+| Tag `Environment` | `dev` | `tst` | `stg` | `prd` |
+| Cuenta Reconocer | `647096294147` | `667397050561` | `453645298399` | `696708350333` |
+| Cuenta Batch | `651706752126` | `124355679563` | `311141534073` | `324037294240` |
+| State (`backend.tf` del ambiente) | `dto-terraform-647096294147` | `dto-terraform-667397050561` | `dto-terraform-453645298399` | `dto-terraform-696708350333` |
+| Jenkins (`.jenkins.yml`) | ✅ | ✅ | ✅ | ✅ |
+| `terraform.tfvars` | ✅ | ✅ | ✅ | ✅ |
 | Ultimo build OK | 2026-10-28 (SLCOPRBA-1526) | — | — | — |
 
 ---
@@ -208,7 +210,7 @@ Solo se referencian. No llevan marca por ambiente.
 
 | Fecha | Build | Jira | Resultado | Que cambio |
 |---|---|---|---|---|
-| | | | | |
+| 2026-11-13 | 19813 | SLCOPRBA-1525 | ❌ sin cambios | Primer build de QA (rama `qa` tras el PR #1). Fallo en Sonar: la seccion `qa` del `.jenkins.yml` venia de plantilla (`projectKey: null`, sin cuenta) y `qa/terraform.tfvars` estaba vacio. No toco AWS. Corregido en la rama: `.jenkins.yml`, tfvars y `backend.tf` de QA, DEMO y PDN |
 
 ### DEMO
 
